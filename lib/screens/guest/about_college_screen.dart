@@ -126,10 +126,10 @@ class Partner {
 }
 
 const List<Partner> partners = [
-  Partner(name: 'Информационные спутниковые системы', description: 'Партнёр по практике и проектам', icon: Icons.satellite_alt, color: Color(0xFF1A237E), url: 'https://www.iss-reshetnev.ru'),
-  Partner(name: 'КрасМаш', description: 'Машиностроение и практика', icon: Icons.precision_manufacturing, color: Color(0xFF4E342E), url: 'https://www.krasmash.ru'),
-  Partner(name: 'СГК', description: 'Энергетика и стажировки', icon: Icons.bolt, color: Color(0xFFE65100), url: 'https://sibgenco.ru'),
-  Partner(name: 'Аэрофлот (техцентр)', description: 'Авиационное направление', icon: Icons.flight, color: Color(0xFF0277BD), url: 'https://www.aeroflot.ru'),
+  Partner(name: 'ОКБ Зенит', description: 'машиностроительное предприятие', icon: Icons.satellite_alt, color: Color(0xFF1A237E), url: 'https://www.iss-reshetnev.ru'),
+  Partner(name: 'КрасМаш', description: 'Красноярский машиностроительный завод', icon: Icons.precision_manufacturing, color: Color(0xFF4E342E), url: 'http://www.krasm.com'),
+  Partner(name: 'РЕШЕТНЁВ', description: 'бывш. ИСС им. академика М.Ф.Решетнёва', icon: Icons.bolt, color: Color(0xFFE65100), url: 'https://sibgenco.ru'),
+  Partner(name: 'НПП «Радиосвязь»', description: ' ведущее высокотехнологичное предприятие', icon: Icons.flight, color: Color(0xFF0277BD), url: 'https://www.aeroflot.ru'),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,4 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 
 class DocumentSubmissionScreen extends StatefulWidget {
   final List<String>? initialSpecialties;
@@ -67,17 +73,58 @@ class _DocumentSubmissionScreenState
     super.dispose();
   }
 
-  void _simulateFilePick() {
-    setState(() {
-      // Simulate adding a file (in production use file_picker package)
-      _attachedFiles
-          .add('документ_${_attachedFiles.length + 1}.pdf');
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text(
-              'Файл прикреплён (интеграция file_picker требует плагина)')),
-    );
+  // ── Открыть file_picker для выбора файлов ───────────────────────────────
+  Future<void> _pickFiles() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          for (final file in result.files) {
+            _attachedFiles.add(file.name);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка выбора файла: $e')),
+        );
+      }
+    }
+  }
+
+  // ── Скопировать PDF из assets во временную папку и открыть ───────────────
+  Future<void> _openPdfFromAssets(String assetPath) async {
+    try {
+      // Читаем файл из assets
+      final byteData = await rootBundle.load(assetPath);
+      final bytes = byteData.buffer.asUint8List();
+
+      // Получаем временную директорию
+      final tempDir = await getTemporaryDirectory();
+      final fileName = assetPath.split('/').last;
+      final tempFile = File('${tempDir.path}/$fileName');
+
+      // Записываем файл
+      await tempFile.writeAsBytes(bytes, flush: true);
+
+      // Открываем файл через системное приложение
+      await OpenFile.open(tempFile.path);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Не удалось открыть файл. Убедитесь, что файл $assetPath добавлен в assets/docs/',
+            ),
+          ),
+        );
+      }
+    }
   }
 
   void _removeFile(int index) {
@@ -312,9 +359,9 @@ class _DocumentSubmissionScreenState
                 const SizedBox(height: 8),
               ],
 
-              // Add file button
+              // Add file button — теперь открывает file_picker
               GestureDetector(
-                onTap: _simulateFilePick,
+                onTap: _pickFiles,
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -494,14 +541,7 @@ class _DocumentSubmissionScreenState
   Widget _buildPdfButton(
       String label, String assetPath, Color color, IconData icon) {
     return GestureDetector(
-      onTap: () {
-        // TODO: open/download PDF from assets
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Скачать: $assetPath (добавьте файл в assets/docs/)')),
-        );
-      },
+      onTap: () => _openPdfFromAssets(assetPath),
       child: Container(
         padding:
         const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
