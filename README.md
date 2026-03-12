@@ -1,16 +1,49 @@
-# aksibgu
+# AKSIBGUU
 
-A new Flutter project.
+Мобильное приложение для Аэрокосмического колледжа СибГУ им. академика М. Ф. Решетнёва , разработанное на **Flutter** и языке Dart.  
+Проект используется как часть учебной/дипломной работы по направлению «Информационные системы и программирование».
 
-## Getting Started
+## Возможности
 
-This project is a starting point for a Flutter application.
+- Просмотр основной информации о колледже.
+- Работа с расписанием и учебными материалами (планируется).
+- Авторизация и личный кабинет студента.
+- Адаптивный интерфейс под разные размеры экранов.
+и тд.
+## Технологии
 
-A few resources to get you started if this is your first Flutter project:
+- Flutter (Dart)
+- Android Studio 
+- Git и GitHub для контроля версий
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Запуск проекта
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Установить Flutter SDK:  
+   https://docs.flutter.dev/get-started/install
+
+   
+3. Клонировать репозиторий:
+```bash
+  git clone https://github.com/ZZZzzz-228/aksibguu.git
+   cd aksibguu
+
+   
+3. Установить зависимости:
+    flutter pub get
+
+    
+4. Запустить приложение:
+    flutter run
+
+    
+5. Сборка APK
+    flutter build apk --split-per-abi
+```
+
+
+
+## Авторы
+
+- Семён Кучер (ZZZzzz-228) — Проектирование и разработка.
+- Семён Колегов (хз) — Проектирование и разработка.
+- Максим Ворошилов (хз) — хз че он тут забыл, ну да ладно, НАШ СЛОНЯРА!!).
