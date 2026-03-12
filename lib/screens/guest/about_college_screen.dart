@@ -25,7 +25,7 @@ class FavoriteSpecialtyStore {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Модель специальности
+// Модель специальности (добавлены поля: квалификация, карьера, навыки, зарплата)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class Specialty {
@@ -38,33 +38,159 @@ class Specialty {
   final String form;
   final IconData icon;
   final Color color;
+  final String qualification;
+  final String career;
+  final String skills;
+  final String salary;
   const Specialty({
     required this.id, required this.title, required this.shortTitle,
     required this.code, required this.description, required this.duration,
     required this.form, required this.icon, required this.color,
+    required this.qualification, required this.career, required this.skills,
+    required this.salary,
   });
 }
 
 const List<Specialty> specialties = [
-  Specialty(id: 'Сетевое и системное администрирование', title: 'Сетевое и системное администрирование', shortTitle: 'Сетевое администрирование', code: '09.02.06', description: 'Специальность готовит специалистов по установке, настройке и обслуживанию сетевого оборудования, серверов и операционных систем. Выпускники работают системными администраторами, сетевыми инженерами и IT-специалистами.', duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.lan, color: Color(0xFF1565C0)),
-  Specialty(id: 'Информационные системы и программирование', title: 'Информационные системы и программирование', shortTitle: 'ИС и программирование', code: '09.02.07', description: 'Обучение разработке программного обеспечения, созданию веб-приложений и информационных систем. Специальность охватывает языки программирования, базы данных, алгоритмы и проектирование ПО.', duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.code, color: Color(0xFF0288D1)),
-  Specialty(id: 'Обеспечение информационной безопасности телекоммуникационных систем', title: 'Обеспечение информационной безопасности телекоммуникационных систем', shortTitle: 'ИБ телекоммуникаций', code: '10.02.03', description: 'Специальность по защите информации в телекоммуникационных системах и сетях. Включает криптографию, защиту каналов связи и противодействие сетевым атакам.', duration: '2 года 10 месяцев', form: 'Очная', icon: Icons.security, color: Color(0xFF00695C)),
-  Specialty(id: 'Обеспечение информационной безопасности автоматизированных систем', title: 'Обеспечение информационной безопасности автоматизированных систем', shortTitle: 'ИБ автоматизированных систем', code: '10.02.04', description: 'Подготовка специалистов по защите автоматизированных информационных систем. Студенты изучают методы анализа уязвимостей, управление доступом и аудит безопасности.', duration: '2 года 10 месяцев', form: 'Очная', icon: Icons.shield, color: Color(0xFF2E7D32)),
-  Specialty(id: 'Техническая эксплуатация и обслуживание электрического и электромеханического оборудования (по отраслям)', title: 'Техническая эксплуатация и обслуживание электрического и электромеханического оборудования (по отраслям)', shortTitle: 'Электрооборудование', code: '13.02.11', description: 'Специальность по технической эксплуатации и обслуживанию электрического и электромеханического оборудования различных отраслей промышленности.', duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.electrical_services, color: Color(0xFFF57F17)),
-  Specialty(id: 'Специальные машины и устройства', title: 'Специальные машины и устройства', shortTitle: 'Спецмашины и устройства', code: '17.02.12', description: 'Обучение проектированию, изготовлению и обслуживанию специальных машин и механизмов для промышленности.', duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.precision_manufacturing, color: Color(0xFF6A1B9A)),
-  Specialty(id: 'Технология машиностроения', title: 'Технология машиностроения', shortTitle: 'Технология машиностроения', code: '15.02.08', description: 'Подготовка техников-технологов для машиностроительного производства. Охватывает металлообработку, станочное оборудование и технологические процессы.', duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.settings, color: Color(0xFF4E342E)),
-  Specialty(id: 'Мехатроника и мобильная робототехника (по отраслям)', title: 'Мехатроника и мобильная робототехника (по отраслям)', shortTitle: 'Мехатроника и робототехника', code: '15.02.16', description: 'Современная специальность на стыке механики, электроники и программирования. Студенты создают роботизированные системы и мобильные роботы для различных отраслей.', duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.smart_toy, color: Color(0xFF0277BD)),
-  Specialty(id: 'Сооружение и эксплуатация газонефтепроводов и газонефтехранилищ (прикладная геология, горное дело, нефтегазовое дело и геодезия)', title: 'Сооружение и эксплуатация газонефтепроводов и газонефтехранилищ (прикладная геология, горное дело, нефтегазовое дело и геодезия)', shortTitle: 'Газонефтепроводы', code: '21.02.03', description: 'Специальность по сооружению и эксплуатации трубопроводного транспорта нефти и газа. Подготовка специалистов для нефтегазовой отрасли.', duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.oil_barrel, color: Color(0xFF558B2F)),
-  Specialty(id: 'Сварочное производство', title: 'Сварочное производство', shortTitle: 'Сварочное производство', code: '22.02.06', description: 'Подготовка специалистов в области технологии сварочного производства. Обучение современным методам сварки и контроля качества сварных соединений.', duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.local_fire_department, color: Color(0xFFBF360C)),
-  Specialty(id: 'Техническое обслуживание авиационных двигателей', title: 'Техническое обслуживание авиационных двигателей', shortTitle: 'Авиационные двигатели', code: '25.02.04', description: 'Специальность по техническому обслуживанию и ремонту авиационных двигателей. Выпускники работают на авиационных предприятиях и в авиакомпаниях.', duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.flight, color: Color(0xFF1A237E)),
-  Specialty(id: 'Контроль работы измерительных приборов', title: 'Контроль работы измерительных приборов', shortTitle: 'Измерительные приборы', code: '12.02.11', description: 'Обучение методам контроля, настройки и поверки измерительного оборудования. Специалисты востребованы в промышленности и лабораториях.', duration: '2 года 10 месяцев', form: 'Очная', icon: Icons.speed, color: Color(0xFF37474F)),
-  Specialty(id: 'Электро‑ и теплоэнергетика', title: 'Электро‑ и теплоэнергетика', shortTitle: 'Электро‑ и теплоэнергетика', code: '13.02.02', description: 'Подготовка специалистов для энергетической отрасли. Охватывает электрические сети, тепловые установки и системы энергоснабжения.', duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.bolt, color: Color(0xFFE65100)),
-  Specialty(id: 'Аэронавигация и эксплуатация авиационной и ракетно‑космической техники', title: 'Аэронавигация и эксплуатация авиационной и ракетно‑космической техники', shortTitle: 'Аэронавигация', code: '25.02.01', description: 'Специальность по эксплуатации авиационной и ракетно-космической техники. Подготовка специалистов для авиационно-космической отрасли.', duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.rocket_launch, color: Color(0xFF283593)),
-  Specialty(id: 'Экономика и бухгалтерский учет', title: 'Экономика и бухгалтерский учет', shortTitle: 'Экономика и бухучёт', code: '38.02.01', description: 'Специальность по экономике, финансам и бухгалтерскому учёту. Выпускники работают бухгалтерами, экономистами и финансовыми аналитиками.', duration: '2 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.account_balance_wallet, color: Color(0xFF00796B)),
+  Specialty(
+    id: 'Сетевое и системное администрирование', title: 'Сетевое и системное администрирование', shortTitle: 'Сетевое администрирование', code: '09.02.06',
+    description: 'Специальность готовит специалистов по установке, настройке и обслуживанию сетевого оборудования, серверов и операционных систем. Выпускники работают системными администраторами, сетевыми инженерами и IT-специалистами.',
+    duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.lan, color: Color(0xFF1565C0),
+    qualification: 'Сетевой и системный администратор',
+    career: 'Системный администратор, сетевой инженер, DevOps-инженер, специалист технической поддержки',
+    skills: 'Linux/Windows Server, настройка сетей, виртуализация, мониторинг серверов',
+    salary: 'от 45 000 ₽',
+  ),
+  Specialty(
+    id: 'Информационные системы и программирование', title: 'Информационные системы и программирование', shortTitle: 'ИС и программирование', code: '09.02.07',
+    description: 'Обучение разработке программного обеспечения, созданию веб-приложений и информационных систем. Специальность охватывает языки программирования, базы данных, алгоритмы и проектирование ПО.',
+    duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.code, color: Color(0xFF0288D1),
+    qualification: 'Программист / Разработчик',
+    career: 'Frontend/Backend-разработчик, мобильный разработчик, тестировщик ПО, аналитик',
+    skills: 'Python, Java, C#, SQL, HTML/CSS/JS, Git, алгоритмы и структуры данных',
+    salary: 'от 60 000 ₽',
+  ),
+  Specialty(
+    id: 'Обеспечение информационной безопасности телекоммуникационных систем', title: 'Обеспечение информационной безопасности телекоммуникационных систем', shortTitle: 'ИБ телекоммуникаций', code: '10.02.03',
+    description: 'Специальность по защите информации в телекоммуникационных системах и сетях. Включает криптографию, защиту каналов связи и противодействие сетевым атакам.',
+    duration: '2 года 10 месяцев', form: 'Очная', icon: Icons.security, color: Color(0xFF00695C),
+    qualification: 'Техник по защите информации',
+    career: 'Специалист по ИБ, пентестер, аналитик SOC, администратор средств защиты',
+    skills: 'Криптография, сетевая безопасность, анализ угроз, настройка МСЭ и IDS/IPS',
+    salary: 'от 55 000 ₽',
+  ),
+  Specialty(
+    id: 'Обеспечение информационной безопасности автоматизированных систем', title: 'Обеспечение информационной безопасности автоматизированных систем', shortTitle: 'ИБ автоматизированных систем', code: '10.02.04',
+    description: 'Подготовка специалистов по защите автоматизированных информационных систем. Студенты изучают методы анализа уязвимостей, управление доступом и аудит безопасности.',
+    duration: '2 года 10 месяцев', form: 'Очная', icon: Icons.shield, color: Color(0xFF2E7D32),
+    qualification: 'Техник по защите информации',
+    career: 'Аудитор информационной безопасности, специалист по защите АСУ ТП, инженер ИБ',
+    skills: 'Аудит безопасности, управление доступом, SIEM-системы, анализ уязвимостей',
+    salary: 'от 55 000 ₽',
+  ),
+  Specialty(
+    id: 'Техническая эксплуатация и обслуживание электрического и электромеханического оборудования (по отраслям)', title: 'Техническая эксплуатация и обслуживание электрического и электромеханического оборудования (по отраслям)', shortTitle: 'Электрооборудование', code: '13.02.11',
+    description: 'Специальность по технической эксплуатации и обслуживанию электрического и электромеханического оборудования различных отраслей промышленности.',
+    duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.electrical_services, color: Color(0xFFF57F17),
+    qualification: 'Техник-электромеханик',
+    career: 'Электромеханик, наладчик электрооборудования, энергетик предприятия',
+    skills: 'Электрические схемы, наладка оборудования, ремонт электродвигателей, ПУЭ',
+    salary: 'от 40 000 ₽',
+  ),
+  Specialty(
+    id: 'Специальные машины и устройства', title: 'Специальные машины и устройства', shortTitle: 'Спецмашины и устройства', code: '17.02.12',
+    description: 'Обучение проектированию, изготовлению и обслуживанию специальных машин и механизмов для промышленности.',
+    duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.precision_manufacturing, color: Color(0xFF6A1B9A),
+    qualification: 'Техник-механик',
+    career: 'Инженер-конструктор, техник по спецмашинам, мастер производственного участка',
+    skills: 'Черчение и САПР, обработка металлов, сборка механизмов, контроль качества',
+    salary: 'от 42 000 ₽',
+  ),
+  Specialty(
+    id: 'Технология машиностроения', title: 'Технология машиностроения', shortTitle: 'Технология машиностроения', code: '15.02.08',
+    description: 'Подготовка техников-технологов для машиностроительного производства. Охватывает металлообработку, станочное оборудование и технологические процессы.',
+    duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.settings, color: Color(0xFF4E342E),
+    qualification: 'Техник-технолог',
+    career: 'Технолог машиностроительного производства, оператор ЧПУ, мастер цеха',
+    skills: 'Программирование ЧПУ, технологические процессы, метрология, чтение чертежей',
+    salary: 'от 45 000 ₽',
+  ),
+  Specialty(
+    id: 'Мехатроника и мобильная робототехника (по отраслям)', title: 'Мехатроника и мобильная робототехника (по отраслям)', shortTitle: 'Мехатроника и робототехника', code: '15.02.16',
+    description: 'Современная специальность на стыке механики, электроники и программирования. Студенты создают роботизированные системы и мобильные роботы для различных отраслей.',
+    duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.smart_toy, color: Color(0xFF0277BD),
+    qualification: 'Техник-мехатроник',
+    career: 'Инженер-робототехник, программист роботов, наладчик автоматизированных линий',
+    skills: 'Arduino/Raspberry Pi, программирование контроллеров, 3D-моделирование, сенсоры',
+    salary: 'от 50 000 ₽',
+  ),
+  Specialty(
+    id: 'Сооружение и эксплуатация газонефтепроводов и газонефтехранилищ (прикладная геология, горное дело, нефтегазовое дело и геодезия)', title: 'Сооружение и эксплуатация газонефтепроводов и газонефтехранилищ (прикладная геология, горное дело, нефтегазовое дело и геодезия)', shortTitle: 'Газонефтепроводы', code: '21.02.03',
+    description: 'Специальность по сооружению и эксплуатации трубопроводного транспорта нефти и газа. Подготовка специалистов для нефтегазовой отрасли.',
+    duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.oil_barrel, color: Color(0xFF558B2F),
+    qualification: 'Техник по эксплуатации трубопроводов',
+    career: 'Оператор нефтеперекачивающей станции, техник-эксплуатационник, инженер ГНП',
+    skills: 'Трубопроводный транспорт, диагностика, сварочные работы, экология',
+    salary: 'от 55 000 ₽',
+  ),
+  Specialty(
+    id: 'Сварочное производство', title: 'Сварочное производство', shortTitle: 'Сварочное производство', code: '22.02.06',
+    description: 'Подготовка специалистов в области технологии сварочного производства. Обучение современным методам сварки и контроля качества сварных соединений.',
+    duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.local_fire_department, color: Color(0xFFBF360C),
+    qualification: 'Техник-сварщик',
+    career: 'Сварщик, инженер-технолог сварочного производства, контролёр качества',
+    skills: 'MIG/MAG, TIG, ручная дуговая сварка, дефектоскопия, чтение чертежей',
+    salary: 'от 50 000 ₽',
+  ),
+  Specialty(
+    id: 'Техническое обслуживание авиационных двигателей', title: 'Техническое обслуживание авиационных двигателей', shortTitle: 'Авиационные двигатели', code: '25.02.04',
+    description: 'Специальность по техническому обслуживанию и ремонту авиационных двигателей. Выпускники работают на авиационных предприятиях и в авиакомпаниях.',
+    duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.flight, color: Color(0xFF1A237E),
+    qualification: 'Техник по авиационным двигателям',
+    career: 'Авиатехник, инженер по ТО двигателей, специалист авиаремонтного завода',
+    skills: 'Газотурбинные двигатели, диагностика, авиационные материалы, регламент ТО',
+    salary: 'от 55 000 ₽',
+  ),
+  Specialty(
+    id: 'Контроль работы измерительных приборов', title: 'Контроль работы измерительных приборов', shortTitle: 'Измерительные приборы', code: '12.02.11',
+    description: 'Обучение методам контроля, настройки и поверки измерительного оборудования. Специалисты востребованы в промышленности и лабораториях.',
+    duration: '2 года 10 месяцев', form: 'Очная', icon: Icons.speed, color: Color(0xFF37474F),
+    qualification: 'Техник-метролог',
+    career: 'Метролог, контролёр ОТК, калибровщик, инженер по качеству',
+    skills: 'Метрология, поверка приборов, стандартизация, работа с эталонами',
+    salary: 'от 40 000 ₽',
+  ),
+  Specialty(
+    id: 'Электро‑ и теплоэнергетика', title: 'Электро‑ и теплоэнергетика', shortTitle: 'Электро‑ и теплоэнергетика', code: '13.02.02',
+    description: 'Подготовка специалистов для энергетической отрасли. Охватывает электрические сети, тепловые установки и системы энергоснабжения.',
+    duration: '3 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.bolt, color: Color(0xFFE65100),
+    qualification: 'Техник-энергетик',
+    career: 'Электромонтёр, энергетик, техник по обслуживанию ТЭЦ, диспетчер энергосистем',
+    skills: 'Электрические сети, тепловые установки, релейная защита, энергоаудит',
+    salary: 'от 45 000 ₽',
+  ),
+  Specialty(
+    id: 'Аэронавигация и эксплуатация авиационной и ракетно‑космической техники', title: 'Аэронавигация и эксплуатация авиационной и ракетно‑космической техники', shortTitle: 'Аэронавигация', code: '25.02.01',
+    description: 'Специальность по эксплуатации авиационной и ракетно-космической техники. Подготовка специалистов для авиационно-космической отрасли.',
+    duration: '3 года 10 месяцев', form: 'Очная', icon: Icons.rocket_launch, color: Color(0xFF283593),
+    qualification: 'Техник по авиационной и РК технике',
+    career: 'Техник аэронавигации, инженер РКТ, специалист космодрома, авиадиспетчер',
+    skills: 'Аэродинамика, навигационные системы, радиоэлектроника, ракетные двигатели',
+    salary: 'от 55 000 ₽',
+  ),
+  Specialty(
+    id: 'Экономика и бухгалтерский учет', title: 'Экономика и бухгалтерский учет', shortTitle: 'Экономика и бухучёт', code: '38.02.01',
+    description: 'Специальность по экономике, финансам и бухгалтерскому учёту. Выпускники работают бухгалтерами, экономистами и финансовыми аналитиками.',
+    duration: '2 года 10 месяцев', form: 'Очная / Заочная', icon: Icons.account_balance_wallet, color: Color(0xFF00796B),
+    qualification: 'Бухгалтер / Экономист',
+    career: 'Бухгалтер, экономист, аудитор, финансовый аналитик, налоговый консультант',
+    skills: '1С:Бухгалтерия, налогообложение, финансовый анализ, Excel, отчётность',
+    salary: 'от 35 000 ₽',
+  ),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Обучение
+// Обучение (добавлены поля: для кого, что получите, формат)
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum EducationFilter { additional, courses }
@@ -78,18 +204,53 @@ class EducationProgram {
   final String details;
   final IconData icon;
   final Color color;
-  const EducationProgram({required this.type, required this.title, required this.description, required this.duration, required this.details, required this.icon, required this.color});
+  final String targetAudience;
+  final String outcome;
+  final String format;
+  const EducationProgram({required this.type, required this.title, required this.description, required this.duration, required this.details, required this.icon, required this.color, required this.targetAudience, required this.outcome, required this.format});
 }
 
 const List<EducationProgram> educationPrograms = [
-  EducationProgram(type: EducationType.additional, title: 'Веб-разработка (Full Stack)', description: 'HTML, CSS, JavaScript, React, Node.js — от основ до практики.', duration: '6 месяцев', details: 'Курс охватывает полный стек веб-разработки: вёрстка, стилизация, JavaScript, фреймворки React и Node.js. После завершения курса вы сможете создавать современные веб-приложения и работать как фронтенд, так и бэкенд разработчиком.', icon: Icons.web, color: Color(0xFF1565C0)),
-  EducationProgram(type: EducationType.additional, title: '1С: Бухгалтерия', description: 'Практический курс по работе с 1С:Бухгалтерия 8.3.', duration: '3 месяца', details: 'Освоите работу в программе 1С:Бухгалтерия 8.3: ввод первичных документов, учёт расчётов с контрагентами, формирование отчётности. Курс предназначен для начинающих бухгалтеров и специалистов по учёту.', icon: Icons.calculate, color: Color(0xFF00695C)),
-  EducationProgram(type: EducationType.additional, title: 'AutoCAD для инженеров', description: 'Черчение и проектирование: 2D/3D основы.', duration: '4 месяца', details: 'Научитесь создавать технические чертежи и трёхмерные модели в AutoCAD. Курс включает 2D-черчение, 3D-моделирование, оформление чертежей по ГОСТ.', icon: Icons.design_services, color: Color(0xFF6A1B9A)),
-  EducationProgram(type: EducationType.additional, title: 'Основы кибербезопасности', description: 'Уязвимости, защита инфраструктуры, базовые практики.', duration: '5 месяцев', details: 'Курс знакомит с основными угрозами информационной безопасности, методами защиты сетей и систем, основами криптографии. Вы научитесь выявлять уязвимости и применять инструменты защиты информации.', icon: Icons.lock, color: Color(0xFF2E7D32)),
-  EducationProgram(type: EducationType.courses, title: 'Математика для поступающих', description: 'Алгебра, геометрия, типовые задачи — интенсив.', duration: '2 месяца', details: 'Интенсивная подготовка к поступлению: алгебра, геометрия, тригонометрия, типовые задачи вступительных испытаний. Занятия в малых группах, разбор типичных ошибок.', icon: Icons.functions, color: Color(0xFFF57F17)),
-  EducationProgram(type: EducationType.courses, title: 'Русский язык и изложение', description: 'Орфография, пунктуация, сочинения и изложение.', duration: '2 месяца', details: 'Подготовка по русскому языку: повторение орфографии и пунктуации, практика написания изложений и сочинений. Разбор типовых ошибок и заданий вступительных испытаний.', icon: Icons.menu_book, color: Color(0xFFBF360C)),
-  EducationProgram(type: EducationType.courses, title: 'Информатика — базовый курс', description: 'Алгоритмы, основы программирования, практика.', duration: '1,5 месяца', details: 'Базовая подготовка по информатике: алгоритмы и основы программирования, работа с офисными программами, устройство компьютера.', icon: Icons.computer, color: Color(0xFF0277BD)),
-  EducationProgram(type: EducationType.courses, title: 'Физика для технических специальностей', description: 'Механика, электричество, термодинамика — подготовка.', duration: '2 месяца', details: 'Подготовительный курс по физике: механика, молекулярная физика, электричество и магнетизм, оптика. Разбор задач вступительных испытаний и практические лабораторные работы.', icon: Icons.science, color: Color(0xFF37474F)),
+  EducationProgram(type: EducationType.additional, title: 'Веб-разработка (Full Stack)', description: 'HTML, CSS, JavaScript, React, Node.js — от основ до практики.', duration: '6 месяцев', details: 'Курс охватывает полный стек веб-разработки: вёрстка, стилизация, JavaScript, фреймворки React и Node.js. После завершения курса вы сможете создавать современные веб-приложения и работать как фронтенд, так и бэкенд разработчиком.', icon: Icons.web, color: Color(0xFF1565C0),
+    targetAudience: 'Для начинающих и тех, кто хочет сменить профессию на IT',
+    outcome: 'Сертификат о доп. образовании, портфолио из 3+ проектов',
+    format: 'Очно, 3 раза в неделю по 2 часа',
+  ),
+  EducationProgram(type: EducationType.additional, title: '1С: Бухгалтерия', description: 'Практический курс по работе с 1С:Бухгалтерия 8.3.', duration: '3 месяца', details: 'Освоите работу в программе 1С:Бухгалтерия 8.3: ввод первичных документов, учёт расчётов с контрагентами, формирование отчётности. Курс предназначен для начинающих бухгалтеров и специалистов по учёту.', icon: Icons.calculate, color: Color(0xFF00695C),
+    targetAudience: 'Для начинающих бухгалтеров и экономистов',
+    outcome: 'Сертификат 1С:Профессионал, навыки ведения учёта',
+    format: 'Очно, 2 раза в неделю по 3 часа',
+  ),
+  EducationProgram(type: EducationType.additional, title: 'AutoCAD для инженеров', description: 'Черчение и проектирование: 2D/3D основы.', duration: '4 месяца', details: 'Научитесь создавать технические чертежи и трёхмерные модели в AutoCAD. Курс включает 2D-черчение, 3D-моделирование, оформление чертежей по ГОСТ.', icon: Icons.design_services, color: Color(0xFF6A1B9A),
+    targetAudience: 'Для студентов технических специальностей и инженеров',
+    outcome: 'Удостоверение, навыки работы с AutoCAD 2D/3D',
+    format: 'Очно, 2 раза в неделю по 2,5 часа',
+  ),
+  EducationProgram(type: EducationType.additional, title: 'Основы кибербезопасности', description: 'Уязвимости, защита инфраструктуры, базовые практики.', duration: '5 месяцев', details: 'Курс знакомит с основными угрозами информационной безопасности, методами защиты сетей и систем, основами криптографии. Вы научитесь выявлять уязвимости и применять инструменты защиты информации.', icon: Icons.lock, color: Color(0xFF2E7D32),
+    targetAudience: 'Для студентов IT-направлений и всех интересующихся ИБ',
+    outcome: 'Сертификат, базовые навыки пентеста и защиты сетей',
+    format: 'Очно, 2 раза в неделю по 2 часа + лабораторные',
+  ),
+  EducationProgram(type: EducationType.courses, title: 'Математика для поступающих', description: 'Алгебра, геометрия, типовые задачи — интенсив.', duration: '2 месяца', details: 'Интенсивная подготовка к поступлению: алгебра, геометрия, тригонометрия, типовые задачи вступительных испытаний. Занятия в малых группах, разбор типичных ошибок.', icon: Icons.functions, color: Color(0xFFF57F17),
+    targetAudience: 'Для школьников 9–11 классов, поступающих в колледж',
+    outcome: 'Уверенное решение задач вступительных экзаменов',
+    format: 'Очно, 3 раза в неделю, группы до 12 человек',
+  ),
+  EducationProgram(type: EducationType.courses, title: 'Русский язык и изложение', description: 'Орфография, пунктуация, сочинения и изложение.', duration: '2 месяца', details: 'Подготовка по русскому языку: повторение орфографии и пунктуации, практика написания изложений и сочинений. Разбор типовых ошибок и заданий вступительных испытаний.', icon: Icons.menu_book, color: Color(0xFFBF360C),
+    targetAudience: 'Для школьников, готовящихся к поступлению',
+    outcome: 'Грамотность, уверенное написание изложений и сочинений',
+    format: 'Очно, 3 раза в неделю, группы до 10 человек',
+  ),
+  EducationProgram(type: EducationType.courses, title: 'Информатика — базовый курс', description: 'Алгоритмы, основы программирования, практика.', duration: '1,5 месяца', details: 'Базовая подготовка по информатике: алгоритмы и основы программирования, работа с офисными программами, устройство компьютера.', icon: Icons.computer, color: Color(0xFF0277BD),
+    targetAudience: 'Для школьников без опыта в программировании',
+    outcome: 'Основы алгоритмизации, уверенная работа с ПК',
+    format: 'Очно, 2 раза в неделю с практикой на компьютерах',
+  ),
+  EducationProgram(type: EducationType.courses, title: 'Физика для технических специальностей', description: 'Механика, электричество, термодинамика — подготовка.', duration: '2 месяца', details: 'Подготовительный курс по физике: механика, молекулярная физика, электричество и магнетизм, оптика. Разбор задач вступительных испытаний и практические лабораторные работы.', icon: Icons.science, color: Color(0xFF37474F),
+    targetAudience: 'Для школьников, поступающих на технические специальности',
+    outcome: 'Уверенное решение задач по физике, понимание основ',
+    format: 'Очно, 2 раза в неделю + лабораторные работы',
+  ),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -505,7 +666,7 @@ class _FrostedHeader extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Карточка специальности — код сдвинут влево, не заходит под звёздочку
+// Карточка специальности (добавлена форма обучения в нижнюю строку)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SpecialtyCard extends StatelessWidget {
@@ -541,11 +702,11 @@ class _SpecialtyCard extends StatelessWidget {
                   Row(children: [
                     const Icon(Icons.schedule, color: Colors.white70, size: 13),
                     const SizedBox(width: 4),
-                    Expanded(child: Text(specialty.duration, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12))),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward, color: Colors.white54, size: 13),
+                    Text(specialty.duration, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.school, color: Colors.white70, size: 13),
                     const SizedBox(width: 4),
-                    const Text('Подробнее', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                    Expanded(child: Text(specialty.form, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12))),
                   ]),
                 ],
               ),
@@ -572,7 +733,7 @@ class _SpecialtyCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Карточка обучения — кликабельная, открывает экран с деталями и кнопкой «Записаться»
+// Карточка обучения (добавлена целевая аудитория в нижнюю строку)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EducationCard extends StatelessWidget {
@@ -593,8 +754,10 @@ class _EducationCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(program.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, height: 1.3)),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(program.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey[600], height: 1.4)),
+              const SizedBox(height: 4),
+              Text(program.targetAudience, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: program.color.withOpacity(0.8), fontStyle: FontStyle.italic)),
               const Spacer(),
               Row(children: [
                 Icon(Icons.timer_outlined, size: 14, color: program.color),
@@ -612,7 +775,7 @@ class _EducationCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Экран деталей программы обучения (с кнопкой «Записаться»)
+// Экран деталей программы обучения (добавлены секции: Для кого, Что вы получите, Формат)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class EducationDetailScreen extends StatelessWidget {
@@ -643,6 +806,17 @@ class EducationDetailScreen extends StatelessWidget {
           const Text('О программе', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Text(program.details, style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.6)),
+          const SizedBox(height: 20),
+
+          // Для кого
+          _buildDetailSection(Icons.people_outline, 'Для кого', program.targetAudience, program.color),
+          const SizedBox(height: 12),
+          // Что вы получите
+          _buildDetailSection(Icons.emoji_events_outlined, 'Что вы получите', program.outcome, program.color),
+          const SizedBox(height: 12),
+          // Формат занятий
+          _buildDetailSection(Icons.calendar_today_outlined, 'Формат занятий', program.format, program.color),
+
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
@@ -672,10 +846,34 @@ class EducationDetailScreen extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildDetailSection(IconData icon, String title, String text, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+            const SizedBox(height: 4),
+            Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4)),
+          ])),
+        ],
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Экран деталей специальности
+// Экран деталей специальности (добавлены: квалификация, карьера, навыки, зарплата)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SpecialtyDetailScreen extends StatelessWidget {
@@ -703,7 +901,21 @@ class SpecialtyDetailScreen extends StatelessWidget {
             Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: specialty.color.withOpacity(0.12), borderRadius: BorderRadius.circular(8)), child: Text(specialty.code, style: TextStyle(color: specialty.color, fontSize: 13, fontWeight: FontWeight.w700))),
             const SizedBox(height: 10),
             Text(specialty.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.3)),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+
+            // Квалификация
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(color: specialty.color.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+              child: Row(children: [
+                Icon(Icons.workspace_premium, color: specialty.color, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Квалификация: ${specialty.qualification}', style: TextStyle(fontSize: 13, color: specialty.color, fontWeight: FontWeight.w600))),
+              ]),
+            ),
+            const SizedBox(height: 12),
+
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
@@ -717,6 +929,20 @@ class SpecialtyDetailScreen extends StatelessWidget {
             const Text('О специальности', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Text(specialty.description, style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.6)),
+
+            const SizedBox(height: 20),
+
+            // Кем работать
+            _buildSpecialtyInfoBlock(Icons.work_outline, 'Кем работать', specialty.career, specialty.color),
+            const SizedBox(height: 12),
+
+            // Ключевые навыки
+            _buildSpecialtyInfoBlock(Icons.build_outlined, 'Ключевые навыки', specialty.skills, specialty.color),
+            const SizedBox(height: 12),
+
+            // Зарплата
+            _buildSpecialtyInfoBlock(Icons.payments_outlined, 'Зарплата выпускников', specialty.salary, specialty.color),
+
             const SizedBox(height: 28),
             ValueListenableBuilder<Set<String>>(
               valueListenable: FavoriteSpecialtyStore.instance.favorites,
@@ -750,6 +976,30 @@ class SpecialtyDetailScreen extends StatelessWidget {
       Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])), const SizedBox(height: 2),
       Text(value, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
     ]));
+  }
+
+  Widget _buildSpecialtyInfoBlock(IconData icon, String title, String text, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.15)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+            const SizedBox(height: 4),
+            Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4)),
+          ])),
+        ],
+      ),
+    );
   }
 }
 
@@ -881,31 +1131,217 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Экран «О колледже»
+// Экран «О колледже» — обогащённая версия
 // ─────────────────────────────────────────────────────────────────────────────
 
 class CollegeInfoScreen extends StatelessWidget {
   const CollegeInfoScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)), centerTitle: true, title: const Text('О колледже')),
-      body: SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(width: double.infinity, height: 180, decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Colors.grey[300]),
-            child: ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.asset('assets/images/college_building.jpg', fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.image, size: 64, color: Colors.grey))))),
-        const SizedBox(height: 16),
-        const Text('Наша миссия', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Фото колледжа
+          Container(
+            width: double.infinity, height: 180,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Colors.grey[300]),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset('assets/images/college_building.jpg', fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.image, size: 64, color: Colors.grey)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ── Наша миссия ──
+          const Text('Наша миссия', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
+            'Подготовка высококвалифицированных специалистов, готовых к успешной профессиональной деятельности в современных условиях. '
+                'Мы стремимся воспитать не только профессионалов, но и ответственных граждан, способных внести значимый вклад в развитие общества и технологий.',
+            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+          ),
+          const SizedBox(height: 20),
+
+          // ── О нас ──
+          const Text('О нас', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
+            'Аэрокосмический колледж СибГУ им. академика М.Ф. Решетнёва — одно из ведущих учебных заведений среднего профессионального образования в Красноярском крае. '
+                'Колледж является структурным подразделением Сибирского государственного университета науки и технологий и имеет богатую историю подготовки специалистов для авиационно-космической, машиностроительной и IT-отраслей.\n\n'
+                'На протяжении десятилетий наш колледж выпускает квалифицированных техников, программистов, инженеров и экономистов, которые успешно трудоустраиваются на ведущих предприятиях региона и страны. '
+                'Тесное сотрудничество с промышленными партнёрами — ОКБ «Зенит», КрасМаш, АО «РЕШЕТНЁВ» — обеспечивает студентам возможность проходить производственную практику на реальном оборудовании.',
+            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Колледж в цифрах ──
+          const Text('Колледж в цифрах', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(child: _StatCard(icon: Icons.people, value: '2 500+', label: 'Студентов', color: Color(0xFF4A90E2))),
+            const SizedBox(width: 10),
+            Expanded(child: _StatCard(icon: Icons.auto_stories, value: '15', label: 'Специальностей', color: Color(0xFF66BB6A))),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _StatCard(icon: Icons.emoji_events, value: '60+', label: 'Лет истории', color: Color(0xFFFFA726))),
+            const SizedBox(width: 10),
+            Expanded(child: _StatCard(icon: Icons.business, value: '4', label: 'Партнёра', color: Color(0xFFAB47BC))),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _StatCard(icon: Icons.school, value: '95%', label: 'Трудоустройство', color: Color(0xFF26A69A))),
+            const SizedBox(width: 10),
+            Expanded(child: _StatCard(icon: Icons.groups, value: '150+', label: 'Преподавателей', color: Color(0xFFEF5350))),
+          ]),
+          const SizedBox(height: 24),
+
+          // ── Почему выбирают нас ──
+          const Text('Почему выбирают нас', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          _AdvantageItem(icon: Icons.rocket_launch, title: 'Аэрокосмическое наследие', text: 'Уникальные специальности, связанные с авиацией и ракетно-космической техникой, которые есть далеко не в каждом колледже.', color: Color(0xFF283593)),
+          const SizedBox(height: 10),
+          _AdvantageItem(icon: Icons.computer, title: 'Современные IT-направления', text: 'Программирование, кибербезопасность, системное администрирование — востребованные специальности с высоким спросом на рынке труда.', color: Color(0xFF0288D1)),
+          const SizedBox(height: 10),
+          _AdvantageItem(icon: Icons.handshake, title: 'Связь с индустрией', text: 'Производственная практика на реальных предприятиях. Наши партнёры — КрасМаш, РЕШЕТНЁВ, ОКБ «Зенит» — берут выпускников на работу.', color: Color(0xFF2E7D32)),
+          const SizedBox(height: 10),
+          _AdvantageItem(icon: Icons.trending_up, title: 'Карьерный рост', text: 'Центр карьеры помогает с трудоустройством, стажировками и развитием профессиональных навыков ещё во время обучения.', color: Color(0xFFE65100)),
+          const SizedBox(height: 24),
+
+          // ── Наши достижения ──
+          const Text('Наши достижения', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          _AchievementCard(icon: Icons.military_tech, title: 'Победители WorldSkills Russia', text: 'Студенты колледжа регулярно занимают призовые места в региональных и национальных чемпионатах WorldSkills по компетенциям «Сетевое администрирование», «Мехатроника» и «Сварочные технологии».', color: Color(0xFFFFA726)),
+          const SizedBox(height: 10),
+          _AchievementCard(icon: Icons.workspace_premium, title: 'Аккредитация и лицензии', text: 'Все образовательные программы прошли государственную аккредитацию. Выпускники получают дипломы государственного образца, признаваемые по всей России.', color: Color(0xFF4A90E2)),
+          const SizedBox(height: 10),
+          _AchievementCard(icon: Icons.science, title: 'Научно-техническое творчество', text: 'Ежегодно студенты участвуют в научных конференциях и инженерных конкурсах, представляя проекты по робототехнике, программированию и 3D-моделированию.', color: Color(0xFF66BB6A)),
+          const SizedBox(height: 10),
+          _AchievementCard(icon: Icons.diversity_3, title: 'Активная студенческая жизнь', text: 'Более 10 кружков и секций: от спортивных команд до IT-клуба и инженерного общества. Регулярные фестивали, соревнования и волонтёрские проекты.', color: Color(0xFFAB47BC)),
+          const SizedBox(height: 24),
+
+          // ── Инфраструктура ──
+          const Text('Инфраструктура', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          const Text(
+            'Колледж располагает современными учебными корпусами, оснащёнными лабораториями и мастерскими:\n'
+                '• Компьютерные классы с лицензионным ПО\n'
+                '• Лаборатории робототехники и мехатроники\n'
+                '• Сварочные мастерские с современным оборудованием\n'
+                '• Лаборатории электротехники и измерительных приборов\n'
+                '• Авиационный ангар для практических занятий\n'
+                '• Библиотека с электронными ресурсами\n'
+                '• Спортивный зал и площадки',
+            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+          ),
+          const SizedBox(height: 32),
+        ]),
+      ),
+    );
+  }
+}
+
+// ── Карточка статистики ──
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+  const _StatCard({required this.icon, required this.value, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(children: [
+        Icon(icon, color: color, size: 28),
         const SizedBox(height: 8),
-        const Text('Подготовка высококвалифицированных специалистов, готовых к успешной профессиональной деятельности в современных условиях.', style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5)),
-        const SizedBox(height: 16),
-        const Text('О нас', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        const Text('Сибирский государственный университет науки и технологий имени академика М.Ф. Решетнёва, аэрокосмический колледж — ведущее учебное заведение в области профессионального образования. Мы гордимся нашими традициями и постоянно развиваемся.', style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5)),
-        const SizedBox(height: 16),
-        const Text('Наши достижения', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        const Text('Placeholder для достижений', style: TextStyle(fontSize: 14, color: Colors.black87)),
-      ])),
+        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700]), textAlign: TextAlign.center),
+      ]),
+    );
+  }
+}
+
+// ── Карточка преимущества ──
+class _AdvantageItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String text;
+  final Color color;
+  const _AdvantageItem({required this.icon, required this.title, required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.06), blurRadius: 6, offset: const Offset(0, 2))],
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: 44, height: 44,
+          decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(text, style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4)),
+        ])),
+      ]),
+    );
+  }
+}
+
+// ── Карточка достижения ──
+class _AchievementCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String text;
+  final Color color;
+  const _AchievementCard({required this.icon, required this.title, required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          colors: [color.withOpacity(0.08), color.withOpacity(0.03)],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          width: 44, height: 44,
+          decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 4),
+          Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4)),
+        ])),
+      ]),
     );
   }
 }

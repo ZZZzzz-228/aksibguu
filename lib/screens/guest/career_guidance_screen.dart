@@ -160,7 +160,7 @@ const List<_TestQuestion> _testQuestions = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Экран профориентации — тест из 15 вопросов
+// Экран профориентации — тест из 15 вопросов (ПО ЦЕНТРУ ЭКРАНА)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class CareerGuidanceScreen extends StatefulWidget {
@@ -184,7 +184,6 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
     if (_currentQuestion < _testQuestions.length - 1) {
       setState(() => _currentQuestion++);
     } else {
-      // Определяем лучший результат
       String bestId = '';
       int bestScore = 0;
       _scores.forEach((id, score) {
@@ -215,6 +214,7 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
     return _buildQuestionScreen(context);
   }
 
+  // ───── ТЕСТ ПО ЦЕНТРУ ЭКРАНА ─────
   Widget _buildQuestionScreen(BuildContext context) {
     final q = _testQuestions[_currentQuestion];
     final progress = (_currentQuestion + 1) / _testQuestions.length;
@@ -233,75 +233,80 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
           ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Прогресс
-            Row(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Вопрос ${_currentQuestion + 1} из ${_testQuestions.length}',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4A90E2)),
+                // Прогресс
+                Row(
+                  children: [
+                    Text(
+                      'Вопрос ${_currentQuestion + 1} из ${_testQuestions.length}',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4A90E2)),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4A90E2)),
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                Text(
-                  '${(progress * 100).toInt()}%',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF4A90E2)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 8,
-                backgroundColor: Colors.grey[200],
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4A90E2)),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Вопрос
-            Text(
-              q.question,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, height: 1.4),
-            ),
-            const SizedBox(height: 20),
-
-            // Варианты ответов
-            ...q.answers.map((a) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => _answer(a),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                    side: const BorderSide(color: Color(0xFFBBDEFB), width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: Colors.white,
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: Colors.grey[200],
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4A90E2)),
                   ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      a.text,
-                      style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.3),
+                ),
+                const SizedBox(height: 32),
+
+                // Вопрос
+                Text(
+                  q.question,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.4),
+                ),
+                const SizedBox(height: 24),
+
+                // Варианты ответов
+                ...q.answers.map((a) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => _answer(a),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        side: const BorderSide(color: Color(0xFFBBDEFB), width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        backgroundColor: Colors.white,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          a.text,
+                          style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.3),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            )),
-          ],
+                )),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildResultScreen(BuildContext context) {
-    // Сортируем по баллам
     final sorted = _scores.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
     final topThree = sorted.take(3).toList();
 
@@ -317,7 +322,6 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Иконка результата
             Container(
               width: 100,
               height: 100,
@@ -335,7 +339,6 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
             ),
             const SizedBox(height: 8),
 
-            // Лучший результат
             Text(
               _resultSpecialty,
               textAlign: TextAlign.center,
@@ -348,7 +351,6 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Топ-3
             if (topThree.length > 1) ...[
               const Align(
                 alignment: Alignment.centerLeft,
@@ -423,7 +425,6 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
             ],
             const SizedBox(height: 24),
 
-            // Кнопка «Подать документы»
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -450,7 +451,6 @@ class _CareerGuidanceScreenState extends State<CareerGuidanceScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Кнопка «Пройти ещё раз»
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
