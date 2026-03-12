@@ -38,6 +38,8 @@
     
 5. Сборка APK
     flutter build apk --split-per-abi
+```
+
 
 
 ## Авторы
