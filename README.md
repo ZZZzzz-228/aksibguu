@@ -23,7 +23,7 @@
 
    
 3. Клонировать репозиторий:
-   ```bash
+```bash
   git clone https://github.com/ZZZzzz-228/aksibguu.git
    cd aksibguu
 
