@@ -293,6 +293,7 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
                             );
                           }),
                         ),
+                        // Кнопка «Подать документы» — появляется когда есть избранные
                         if (favorites.isNotEmpty) ...[
                           const SizedBox(height: 14),
                           SizedBox(
@@ -438,7 +439,8 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Frosted header: при скролле «Центр карьеры» исчезает, «Главная» появляется
+// Frosted header: при скролле иконка и «Центр карьеры» полностью исчезают,
+// «Главная» плавно появляется по центру.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _FrostedHeader extends StatelessWidget {
@@ -451,7 +453,7 @@ class _FrostedHeader extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Матовый фон — появляется плавно при скролле
+          // Матовый фон — появляется плавно
           AnimatedOpacity(
             duration: const Duration(milliseconds: 220),
             opacity: showCenterTitle ? 1 : 0,
@@ -461,7 +463,7 @@ class _FrostedHeader extends StatelessWidget {
             ),
           ),
 
-          // «Центр карьеры» — плавно исчезает при скролле вниз
+          // «Центр карьеры» — исчезает при скролле
           SafeArea(
             bottom: false,
             child: Padding(
@@ -477,7 +479,7 @@ class _FrostedHeader extends StatelessWidget {
             ),
           ),
 
-          // «Главная» — плавно появляется при скролле вниз
+          // «Главная» — плавно появляется по центру при скролле
           SafeArea(
             bottom: false,
             child: Padding(
@@ -503,7 +505,7 @@ class _FrostedHeader extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Карточка специальности
+// Карточка специальности — код сдвинут влево, не заходит под звёздочку
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _SpecialtyCard extends StatelessWidget {
@@ -523,6 +525,7 @@ class _SpecialtyCard extends StatelessWidget {
           Container(
             decoration: BoxDecoration(color: specialty.color, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: specialty.color.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 4))]),
             child: Padding(
+              // Правый отступ увеличен, чтобы код НЕ заходил под звёздочку
               padding: const EdgeInsets.fromLTRB(18, 18, 60, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,7 +572,7 @@ class _SpecialtyCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Карточка обучения
+// Карточка обучения — кликабельная, открывает экран с деталями и кнопкой «Записаться»
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EducationCard extends StatelessWidget {
@@ -609,7 +612,7 @@ class _EducationCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Экран деталей программы обучения
+// Экран деталей программы обучения (с кнопкой «Записаться»)
 // ─────────────────────────────────────────────────────────────────────────────
 
 class EducationDetailScreen extends StatelessWidget {
@@ -751,7 +754,7 @@ class SpecialtyDetailScreen extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Просмотрщик историй
+// Просмотрщик историй — с кнопкой «Подробнее» внизу
 // ─────────────────────────────────────────────────────────────────────────────
 
 class StoryViewerScreen extends StatefulWidget {
@@ -811,6 +814,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
         onTapUp: (details) {
           final screenWidth = MediaQuery.of(context).size.width;
           final screenHeight = MediaQuery.of(context).size.height;
+          // Нижние 25% экрана — зона кнопки «Подробнее», не переключаем
           if (details.globalPosition.dy > screenHeight * 0.75) return;
           if (details.globalPosition.dx < screenWidth / 2) { _previousStory(); } else { _nextStory(); }
         },
@@ -834,6 +838,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
             ),
             Align(alignment: Alignment.centerRight, child: Padding(padding: const EdgeInsets.only(right: 8), child: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white)))),
           ])),
+          // Кнопка «Подробнее» внизу
           Positioned(
             bottom: 40, left: 16, right: 16,
             child: ElevatedButton(
