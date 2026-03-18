@@ -1,4 +1,3 @@
-
 name: career_center_ak_sibgu
 description: Career Center AK SIBGU Mobile App
 publish_to: 'none'
@@ -23,14 +22,18 @@ flutter:
   # Все необходимые ассеты
   assets:
     - assets/images/
+    - assets/images/application logo/
+    - assets/images/college/
+    - assets/images/contacts/
+    - assets/images/education/
+    - assets/images/news/
     - assets/images/partners/
     - assets/images/specialties/
-    - assets/images/education/
+    - assets/images/stories/
     - assets/icons/guest/
     - assets/icons/student/
     - assets/docs/
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/icon42.png"
-
+  image_path: "assets/images/application logo/icon42.png"
