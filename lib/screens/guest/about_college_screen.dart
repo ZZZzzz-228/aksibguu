@@ -344,8 +344,8 @@ const List<Partner> partners = [
   Partner(name: 'ООО «Аэропорт Емельяново»', description: 'Международный аэропорт Красноярска', icon: Icons.local_airport, color: Color(0xFF00838F), url: 'https://www.kja.aero/', imagePath: 'assets/images/partners/emelyanov.png'),
   Partner(name: 'АО «ТК «РусГидро»»', description: 'Гидроэнергетическая компания', icon: Icons.water, color: Color(0xFF1976D2), url: 'https://tk.rushydro.ru/activity/', imagePath: 'assets/images/partners/rushydro.png'),
   Partner(name: 'ОКБ «Микрон»', description: 'Опытно-конструкторское бюро микроэлектроники', icon: Icons.memory, color: Color(0xFF0D47A1), url: 'https://okbmikron.ru/', imagePath: 'assets/images/partners/mikron.png'),
-  Partner(name: 'ПАО «Полюс»', description: 'Крупнейший производитель золота в России', icon: Icons.diamond, color: Color(0xFFFF8F00), url: 'https://polyus.com/ru/', imagePath: 'assets/images/partners/polyus.png'),
-  Partner(name: 'ОК РУСАЛ', description: 'Крупнейший производитель алюминия в мире', icon: Icons.factory, color: Color(0xFFD32F2F), url: 'https://www.rusal.ru/', imagePath: 'assets/images/partners/rusal.png'),
+
+
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 // Экран «Абитуриенту»
@@ -1170,7 +1170,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
                           child: Container(
-                            color: Colors.white.withOpacity(0.30),
+                            color: Colors.black.withOpacity(0.70),
                             child: DraggableScrollableSheet(
                               initialChildSize: 0.7,
                               minChildSize: 0.4,
@@ -1181,46 +1181,46 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                 padding: const EdgeInsets.all(24),
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   Center(child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), borderRadius: BorderRadius.circular(2)))),
-                                  Text(story.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+                                  Text(story.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
                                   const SizedBox(height: 16),
                                   // Дата и время
                                   Container(
                                     padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(12)),
+                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.10), borderRadius: BorderRadius.circular(12)),
                                     child: Column(children: [
                                       Row(children: [
-                                        Icon(Icons.calendar_today, size: 18, color: story.color),
+                                        const Icon(Icons.calendar_today, size: 18, color: Colors.white),
                                         const SizedBox(width: 8),
-                                        Text(story.date, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color)),
+                                        Text(story.date, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
                                       ]),
                                       const SizedBox(height: 8),
                                       Row(children: [
-                                        Icon(Icons.access_time, size: 18, color: story.color),
+                                        const Icon(Icons.access_time, size: 18, color: Colors.white),
                                         const SizedBox(width: 8),
-                                        Text(story.time, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color)),
+                                        Text(story.time, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
                                       ]),
                                       const SizedBox(height: 8),
                                       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                        Icon(Icons.location_on, size: 18, color: story.color),
+                                        const Icon(Icons.location_on, size: 18, color: Colors.white),
                                         const SizedBox(width: 8),
-                                        Expanded(child: Text(story.location, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color))),
+                                        Expanded(child: Text(story.location, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white))),
                                       ]),
                                     ]),
                                   ),
                                   const SizedBox(height: 16),
                                   // Описание
-                                  const Text('О мероприятии', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                                  const Text('О мероприятии', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                                   const SizedBox(height: 8),
-                                  Text(story.content, style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.6)),
+                                  Text(story.content, style: const TextStyle(fontSize: 15, color: Colors.white, height: 1.6)),
                                   const SizedBox(height: 16),
                                   // Расписание
-                                  const Text('Программа', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                                  const Text('Программа', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                                   const SizedBox(height: 8),
                                   Container(
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(12)),
-                                    child: Text(story.schedule, style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.7)),
+                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.10), borderRadius: BorderRadius.circular(12)),
+                                    child: Text(story.schedule, style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.7)),
                                   ),
                                   const SizedBox(height: 24),
                                   SizedBox(width: double.infinity, child: ClipRRect(
@@ -1229,7 +1229,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                                       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                                       child: ElevatedButton(
                                         onPressed: () => Navigator.pop(context),
-                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.2), foregroundColor: Colors.black87, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.2), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
                                         child: const Text('Закрыть'),
                                       ),
                                     ),
