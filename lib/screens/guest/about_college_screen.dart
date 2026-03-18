@@ -1329,7 +1329,7 @@ class CollegeInfoScreen extends StatelessWidget {
           Row(children: [
             Expanded(child: _StatCard(icon: Icons.emoji_events, value: '60+', label: 'Лет истории', color: Color(0xFFFFA726))),
             const SizedBox(width: 10),
-            Expanded(child: _StatCard(icon: Icons.business, value: '4', label: 'Партнёра', color: Color(0xFFAB47BC))),
+            Expanded(child: _StatCard(icon: Icons.business, value: '17', label: 'Партнёра', color: Color(0xFFAB47BC))),
           ]),
           const SizedBox(height: 10),
           Row(children: [
