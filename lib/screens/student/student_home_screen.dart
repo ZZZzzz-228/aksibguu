@@ -1,6 +1,8 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../widgets/centered_app_bar_title.dart';
-import 'dart:async';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
@@ -514,35 +516,25 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
               },
             ),
 
-            // ПРОГРЕСС БАРЫ СВЕРХУ
+            // ПРОГРЕСС БАР СВЕРХУ — одна полоска на текущую историю
             SafeArea(
               child: Column(
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: Row(
-                      children: List.generate(
-                        widget.stories.length,
-                            (index) => Expanded(
-                          child: Container(
-                            height: 3,
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: index == _currentIndex
-                                  ? _progress
-                                  : (index < _currentIndex ? 1.0 : 0.0),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                            ),
+                    child: Container(
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: _progress,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                       ),
@@ -594,68 +586,86 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                 ],
               ),
             ),
+
+            // Кнопка «Подробнее» внизу — прозрачно-матовая
+            Positioned(
+              bottom: 40, left: 16, right: 16,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Material(
+                    color: Colors.white.withOpacity(0.2),
+                    child: InkWell(
+                      onTap: () {
+                        _timer?.cancel();
+                        final story = widget.stories[_currentIndex];
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                          builder: (_) => ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                              child: Container(
+                                color: Colors.black.withOpacity(0.45),
+                                padding: const EdgeInsets.all(24),
+                                child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text(story.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                                  const SizedBox(height: 12),
+                                  Text(story.content, style: const TextStyle(fontSize: 15, color: Colors.white, height: 1.5)),
+                                  const SizedBox(height: 20),
+                                  SizedBox(width: double.infinity, child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                      child: ElevatedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.2), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                                        child: const Text('Закрыть'),
+                                      ),
+                                    ),
+                                  )),
+                                ]),
+                              ),
+                            ),
+                          ),
+                        ).then((_) => _startTimer());
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Center(
+                          child: Text('Подробнее', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  // КОНТЕНТ ОДНОЙ ИСТОРИИ С ИЗОБРАЖЕНИЕМ
+  // КОНТЕНТ ОДНОЙ ИСТОРИИ С ИЗОБРАЖЕНИЕМ (без текста контента)
   Widget _buildStoryContent(StoryData story) {
-    return Container(
-      color: Colors.black,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 100),
-
-          // ИЗОБРАЖЕНИЕ ИСТОРИИ
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  story.imagePath,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 100,
-                        color: Colors.grey,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 32),
-
-          // ТЕКСТ ИСТОРИИ
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Text(
-              story.content,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                height: 1.5,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 50),
-        ],
-      ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          story.imagePath,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(color: Colors.black);
+          },
+        ),
+        Container(color: Colors.black.withOpacity(0.15)),
+      ],
     );
   }
 }

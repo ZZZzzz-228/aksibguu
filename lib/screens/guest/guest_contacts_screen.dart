@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/centered_app_bar_title.dart';
 
 class GuestContactsScreen extends StatefulWidget {
@@ -126,7 +127,7 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
                           ),
                           _buildContactItem(
                             Icons.language,
-                            'sibgu_ru',
+                            'abiturient.sibsau.ru',
                             const Color(0xFF4A90E2),
                           ),
                         ],
@@ -381,34 +382,53 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.email, size: 16, color: Colors.black54),
-                    const SizedBox(width: 8),
-                    Text(
-                      email,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
+                GestureDetector(
+                  onTap: () async {
+                    final uri = Uri.parse('mailto:$email');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.email, size: 16, color: gradientColors[0]),
+                      const SizedBox(width: 8),
+                      Text(
+                        email,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: gradientColors[0],
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.phone, size: 16, color: Colors.black54),
-                    const SizedBox(width: 8),
-                    Text(
-                      phone,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
+                GestureDetector(
+                  onTap: () async {
+                    final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
+                    final uri = Uri.parse('tel:$cleanPhone');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.phone, size: 16, color: gradientColors[0]),
+                      const SizedBox(width: 8),
+                      Text(
+                        phone,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: gradientColors[0],
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -428,19 +448,37 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
   }
 
   Widget _buildContactItem(IconData icon, String text, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.black87,
+    return GestureDetector(
+      onTap: () async {
+        Uri? uri;
+        if (icon == Icons.phone) {
+          final cleanPhone = text.replaceAll(RegExp(r'[^\d+]'), '');
+          uri = Uri.parse('tel:$cleanPhone');
+        } else if (icon == Icons.email) {
+          uri = Uri.parse('mailto:$text');
+        } else if (icon == Icons.language) {
+          final url = text.contains('://') ? text : 'https://$text';
+          uri = Uri.parse(url);
+        }
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              decoration: TextDecoration.underline,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

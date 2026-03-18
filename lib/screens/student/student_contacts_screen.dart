@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/centered_app_bar_title.dart'; // ✅ Добавлен импорт
+import 'package:url_launcher/url_launcher.dart';
+import '../widgets/centered_app_bar_title.dart';
 
 class StudentContactsScreen extends StatelessWidget {
   const StudentContactsScreen({super.key});
@@ -202,42 +203,60 @@ class StudentContactsScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.email,
-                                size: 16,
-                                color: Colors.black54,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'ak@sibsau.ru',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.black87,
+                          GestureDetector(
+                            onTap: () async {
+                              final uri = Uri.parse('mailto:ak@sibsau.ru');
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(
+                                  Icons.email,
+                                  size: 16,
+                                  color: Color(0xFF4A90E2),
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 8),
+                                Text(
+                                  'ak@sibsau.ru',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF4A90E2),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.phone,
-                                size: 16,
-                                color: Colors.black54,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                '2919115',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.black87,
+                          GestureDetector(
+                            onTap: () async {
+                              final uri = Uri.parse('tel:2919115');
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(
+                                  Icons.phone,
+                                  size: 16,
+                                  color: Color(0xFF4A90E2),
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 8),
+                                Text(
+                                  '2919115',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Color(0xFF4A90E2),
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 8),
                           const Text(
@@ -263,19 +282,37 @@ class StudentContactsScreen extends StatelessWidget {
   }
 
   Widget _buildContactItem(IconData icon, String text, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.black87,
+    return GestureDetector(
+      onTap: () async {
+        Uri? uri;
+        if (icon == Icons.phone) {
+          final cleanPhone = text.replaceAll(RegExp(r'[^\d+]'), '');
+          uri = Uri.parse('tel:$cleanPhone');
+        } else if (icon == Icons.email) {
+          uri = Uri.parse('mailto:$text');
+        } else if (icon == Icons.language) {
+          final url = text.contains('://') ? text : 'https://$text';
+          uri = Uri.parse(url);
+        }
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              color: color,
+              decoration: TextDecoration.underline,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
