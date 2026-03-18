@@ -76,52 +76,52 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      // Телефоны, почта, сайты — друг под другом
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildContactItem(
-                                Icons.phone,
-                                '+7 (391) 264-06-59',
-                                const Color(0xFF4A90E2),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildContactItem(
-                                Icons.phone,
-                                '+7 (391) 264-57-35',
-                                const Color(0xFF4A90E2),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildContactItem(
-                                Icons.phone,
-                                '+7 (391) 264-15-88',
-                                const Color(0xFF4A90E2),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildContactItem(
-                                Icons.email,
-                                'ak@sibsau.ru',
-                                const Color(0xFF4A90E2),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildContactItem(
-                                Icons.language,
-                                'sibsau.ru',
-                                const Color(0xFF4A90E2),
-                              ),
-                              const SizedBox(height: 12),
-                              _buildContactItem(
-                                Icons.language,
-                                'abiturient.sibsau.ru',
-                                const Color(0xFF4A90E2),
-                              ),
-                            ],
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildContactItem(
+                            Icons.phone,
+                            '+7 (391) 264-06-59',
+                            const Color(0xFF4A90E2),
                           ),
-                        ),
+                          _buildContactItem(
+                            Icons.phone,
+                            '+7 (391) 264-57-35',
+                            const Color(0xFF4A90E2),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildContactItem(
+                            Icons.phone,
+                            '+7 (391) 264-15-88',
+                            const Color(0xFF4A90E2),
+                          ),
+                          _buildContactItem(
+                            Icons.email,
+                            'ak@sibsau.ru',
+                            const Color(0xFF4A90E2),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildContactItem(
+                            Icons.language,
+                            'sibsau.ru',
+                            const Color(0xFF4A90E2),
+                          ),
+                          _buildContactItem(
+                            Icons.language,
+                            'abiturient.sibsau.ru',
+                            const Color(0xFF4A90E2),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 24),
                       // Иконки с информацией

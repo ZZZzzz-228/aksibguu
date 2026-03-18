@@ -46,7 +46,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
               // ЛОГОТИП ИЗ ASSETS
               ClipOval(
                 child: Image.asset(
-                  'assets/images/logo.png',
+                  'assets/images/application logo/logo.png',
                   width: 120,
                   height: 120,
                   fit: BoxFit.cover,

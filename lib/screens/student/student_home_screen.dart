@@ -575,9 +575,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                           builder: (_) => ClipRRect(
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                             child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                              filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
                               child: Container(
-                                color: Colors.black.withOpacity(0.45),
+                                color: Colors.white.withOpacity(0.30),
                                 padding: const EdgeInsets.all(24),
                                 child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   Text(story.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),

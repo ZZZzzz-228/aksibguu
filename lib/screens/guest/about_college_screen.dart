@@ -855,7 +855,7 @@ class EducationDetailScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Center(child: Container(width: 80, height: 80, decoration: BoxDecoration(color: program.color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)), child: Icon(program.icon, color: program.color, size: 44))),
+          Center(child: ClipRRect(borderRadius: BorderRadius.circular(20), child: Image.asset(program.imagePath, width: 80, height: 80, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => Container(width: 80, height: 80, decoration: BoxDecoration(color: program.color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)), child: Icon(program.icon, color: program.color, size: 44))))),
           const SizedBox(height: 20),
           Text(program.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, height: 1.3)),
           const SizedBox(height: 12),
@@ -949,10 +949,14 @@ class SpecialtyDetailScreen extends StatelessWidget {
           leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
           flexibleSpace: FlexibleSpaceBar(background: Container(
             decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [specialty.color, specialty.color.withOpacity(0.72)])),
-            child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const SizedBox(height: 40),
-              Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)), child: Icon(specialty.icon, color: Colors.white, size: 48)),
-            ])),
+            child: Stack(fit: StackFit.expand, children: [
+              Image.asset(specialty.imagePath, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => const SizedBox()),
+              Container(color: specialty.color.withOpacity(0.45)),
+              Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const SizedBox(height: 40),
+                Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)), child: Icon(specialty.icon, color: Colors.white, size: 48)),
+              ])),
+            ]),
           )),
         ),
         SliverToBoxAdapter(child: Padding(
@@ -1159,81 +1163,100 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
           // Кнопка «Подробнее» внизу
           Positioned(
             bottom: 40, left: 16, right: 16,
-            child: ElevatedButton(
-              onPressed: () {
-                final story = widget.stories[_currentIndex];
-                _timer?.cancel();
-                showModalBottomSheet(
-                  context: context,
-                  backgroundColor: Colors.white,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-                  builder: (_) => DraggableScrollableSheet(
-                    initialChildSize: 0.7,
-                    minChildSize: 0.4,
-                    maxChildSize: 0.9,
-                    expand: false,
-                    builder: (_, scrollController) => SingleChildScrollView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.all(24),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Center(child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
-                        Text(story.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 16),
-                        // Дата и время
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: story.color.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
-                          child: Column(children: [
-                            Row(children: [
-                              Icon(Icons.calendar_today, size: 18, color: story.color),
-                              const SizedBox(width: 8),
-                              Text(story.date, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color)),
-                            ]),
-                            const SizedBox(height: 8),
-                            Row(children: [
-                              Icon(Icons.access_time, size: 18, color: story.color),
-                              const SizedBox(width: 8),
-                              Text(story.time, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color)),
-                            ]),
-                            const SizedBox(height: 8),
-                            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Icon(Icons.location_on, size: 18, color: story.color),
-                              const SizedBox(width: 8),
-                              Expanded(child: Text(story.location, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color))),
-                            ]),
-                          ]),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: ElevatedButton(
+                  onPressed: () {
+                    final story = widget.stories[_currentIndex];
+                    _timer?.cancel();
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                      builder: (_) => ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+                          child: Container(
+                            color: Colors.white.withOpacity(0.30),
+                            child: DraggableScrollableSheet(
+                              initialChildSize: 0.7,
+                              minChildSize: 0.4,
+                              maxChildSize: 0.9,
+                              expand: false,
+                              builder: (_, scrollController) => SingleChildScrollView(
+                                controller: scrollController,
+                                padding: const EdgeInsets.all(24),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Center(child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), borderRadius: BorderRadius.circular(2)))),
+                                  Text(story.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+                                  const SizedBox(height: 16),
+                                  // Дата и время
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(12)),
+                                    child: Column(children: [
+                                      Row(children: [
+                                        Icon(Icons.calendar_today, size: 18, color: story.color),
+                                        const SizedBox(width: 8),
+                                        Text(story.date, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color)),
+                                      ]),
+                                      const SizedBox(height: 8),
+                                      Row(children: [
+                                        Icon(Icons.access_time, size: 18, color: story.color),
+                                        const SizedBox(width: 8),
+                                        Text(story.time, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color)),
+                                      ]),
+                                      const SizedBox(height: 8),
+                                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                        Icon(Icons.location_on, size: 18, color: story.color),
+                                        const SizedBox(width: 8),
+                                        Expanded(child: Text(story.location, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: story.color))),
+                                      ]),
+                                    ]),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Описание
+                                  const Text('О мероприятии', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                                  const SizedBox(height: 8),
+                                  Text(story.content, style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.6)),
+                                  const SizedBox(height: 16),
+                                  // Расписание
+                                  const Text('Программа', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(12)),
+                                    child: Text(story.schedule, style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.7)),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  SizedBox(width: double.infinity, child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                                      child: ElevatedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.2), foregroundColor: Colors.black87, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                                        child: const Text('Закрыть'),
+                                      ),
+                                    ),
+                                  )),
+                                ]),
+                              ),
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        // Описание
-                        const Text('О мероприятии', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        Text(story.content, style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.6)),
-                        const SizedBox(height: 16),
-                        // Расписание
-                        const Text('Программа', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
-                          child: Text(story.schedule, style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.7)),
-                        ),
-                        const SizedBox(height: 24),
-                        SizedBox(width: double.infinity, child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: ElevatedButton.styleFrom(backgroundColor: story.color, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                          child: const Text('Закрыть'),
-                        )),
-                      ]),
-                    ),
-                  ),
-                ).then((_) => _startTimer());
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.25), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Colors.white54, width: 1)), elevation: 0),
-              child: const Text('Подробнее', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
-            ),
-          ),
+                      ),
+                    ).then((_) => _startTimer());
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.20), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                  child: const Text('Подробнее', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                ),
+              ),),),
         ]),
       ),
     );
