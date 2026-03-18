@@ -343,6 +343,9 @@ const List<Partner> partners = [
   Partner(name: 'АО «Енисейское речное пароходство»', description: 'Речной транспорт и логистика', icon: Icons.directions_boat, color: Color(0xFF1565C0), url: 'https://www.e-river.ru/', imagePath: 'assets/images/partners/erp.png'),
   Partner(name: 'ООО «Аэропорт Емельяново»', description: 'Международный аэропорт Красноярска', icon: Icons.local_airport, color: Color(0xFF00838F), url: 'https://www.kja.aero/', imagePath: 'assets/images/partners/emelyanov.png'),
   Partner(name: 'АО «ТК «РусГидро»»', description: 'Гидроэнергетическая компания', icon: Icons.water, color: Color(0xFF1976D2), url: 'https://tk.rushydro.ru/activity/', imagePath: 'assets/images/partners/rushydro.png'),
+  Partner(name: 'ОКБ «Микрон»', description: 'Опытно-конструкторское бюро микроэлектроники', icon: Icons.memory, color: Color(0xFF0D47A1), url: 'https://okbmikron.ru/', imagePath: 'assets/images/partners/mikron.png'),
+  Partner(name: 'ПАО «Полюс»', description: 'Крупнейший производитель золота в России', icon: Icons.diamond, color: Color(0xFFFF8F00), url: 'https://polyus.com/ru/', imagePath: 'assets/images/partners/polyus.png'),
+  Partner(name: 'ОК РУСАЛ', description: 'Крупнейший производитель алюминия в мире', icon: Icons.factory, color: Color(0xFFD32F2F), url: 'https://www.rusal.ru/', imagePath: 'assets/images/partners/rusal.png'),
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 // Экран «Абитуриенту»
@@ -886,21 +889,7 @@ class EducationDetailScreen extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                showDialog(context: context, builder: (_) => AlertDialog(
-                  title: const Text('Запись на курс'),
-                  content: Text('Вы хотите записаться на курс:\n«${program.title}»?'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Заявка на курс «${program.title}» отправлена!'), backgroundColor: program.color, duration: const Duration(seconds: 3)));
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: program.color, foregroundColor: Colors.white),
-                      child: const Text('Записаться'),
-                    ),
-                  ],
-                ));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => EnrollmentFormScreen(programTitle: program.title, programColor: program.color)));
               },
               style: ElevatedButton.styleFrom(backgroundColor: program.color, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
               child: const Text('Записаться', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
@@ -1264,31 +1253,31 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
   Widget _buildStoryContent(StoryData story) {
     return Stack(fit: StackFit.expand, children: [
       Image.asset(story.imagePath, fit: BoxFit.cover, errorBuilder: (context, error, stackTrace) => Container(color: Colors.black)),
-      Container(color: Colors.black.withOpacity(0.35)),
+      Container(color: Colors.black.withOpacity(0.55)),
       SafeArea(child: Padding(padding: const EdgeInsets.fromLTRB(16, 90, 16, 100), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(story.title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(story.title, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold, shadows: [Shadow(offset: Offset(0, 1), blurRadius: 4, color: Colors.black)])),
         const SizedBox(height: 10),
-        Text(story.content, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.4)),
+        Text(story.content, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.4, shadows: [Shadow(offset: Offset(0, 1), blurRadius: 3, color: Colors.black)])),
         const Spacer(),
         // Дата, время и место на самой истории
         Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: Colors.black.withOpacity(0.3), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(color: Colors.black.withOpacity(0.55), borderRadius: BorderRadius.circular(10)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              const Icon(Icons.calendar_today, size: 14, color: Colors.white70),
+              const Icon(Icons.calendar_today, size: 14, color: Colors.white),
               const SizedBox(width: 6),
-              Text(story.date, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+              Text(story.date, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(width: 12),
-              const Icon(Icons.access_time, size: 14, color: Colors.white70),
+              const Icon(Icons.access_time, size: 14, color: Colors.white),
               const SizedBox(width: 6),
-              Text(story.time, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+              Text(story.time, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: 6),
             Row(children: [
-              const Icon(Icons.location_on, size: 14, color: Colors.white70),
+              const Icon(Icons.location_on, size: 14, color: Colors.white),
               const SizedBox(width: 6),
-              Expanded(child: Text(story.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500))),
+              Expanded(child: Text(story.location, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600))),
             ]),
           ]),
         ),
@@ -1494,6 +1483,187 @@ class _AchievementCard extends StatelessWidget {
           Text(text, style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4)),
         ])),
       ]),
+    );
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+// Экран формы записи на обучение (ФИО, телефон, мессенджер)
+// ─────────────────────────────────────────────────────────────────────────────
+class EnrollmentFormScreen extends StatefulWidget {
+  final String programTitle;
+  final Color programColor;
+  const EnrollmentFormScreen({super.key, required this.programTitle, required this.programColor});
+  @override
+  State<EnrollmentFormScreen> createState() => _EnrollmentFormScreenState();
+}
+class _EnrollmentFormScreenState extends State<EnrollmentFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _messengerController = TextEditingController();
+  bool _isSubmitted = false;
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _messengerController.dispose();
+    super.dispose();
+  }
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isSubmitted = true);
+    }
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
+        title: const Text('Запись на обучение'),
+        backgroundColor: widget.programColor,
+        foregroundColor: Colors.white,
+      ),
+      body: _isSubmitted ? _buildSuccessView() : _buildFormView(),
+    );
+  }
+  Widget _buildSuccessView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80, height: 80,
+              decoration: BoxDecoration(color: widget.programColor.withOpacity(0.12), shape: BoxShape.circle),
+              child: Icon(Icons.check_circle_outline, color: widget.programColor, size: 48),
+            ),
+            const SizedBox(height: 24),
+            const Text('Заявка отправлена!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Text(
+              'Спасибо за интерес к программе «${widget.programTitle}»!\n\nМы получили вашу заявку и свяжемся с вами в ближайшее время для уточнения деталей и подтверждения записи.\n\nОжидайте звонка или сообщения в выбранном вами мессенджере.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.6),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.programColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text('Вернуться', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildFormView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: widget.programColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: widget.programColor.withOpacity(0.2)),
+              ),
+              child: Row(children: [
+                Icon(Icons.school, color: widget.programColor, size: 22),
+                const SizedBox(width: 10),
+                Expanded(child: Text('Программа: ${widget.programTitle}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: widget.programColor))),
+              ]),
+            ),
+            const SizedBox(height: 24),
+            const Text('ФИО', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                hintText: 'Введите ваше ФИО',
+                prefixIcon: const Icon(Icons.person_outline),
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: widget.programColor, width: 2)),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) return 'Пожалуйста, введите ФИО';
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            const Text('Телефон', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                hintText: '+7 (___) ___-__-__',
+                prefixIcon: const Icon(Icons.phone_outlined),
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: widget.programColor, width: 2)),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) return 'Пожалуйста, введите номер телефона';
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            const Text('Мессенджер', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _messengerController,
+              decoration: InputDecoration(
+                hintText: 'Telegram, WhatsApp, Viber и т.д.',
+                prefixIcon: const Icon(Icons.chat_outlined),
+                filled: true,
+                fillColor: Colors.grey[50],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: widget.programColor, width: 2)),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) return 'Пожалуйста, укажите мессенджер';
+                return null;
+              },
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitForm,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.programColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: const Text('Отправить заявку', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
