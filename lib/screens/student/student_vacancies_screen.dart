@@ -21,7 +21,7 @@ class StudentVacanciesScreen extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'Поиск вакансий...',
+                      hintText: 'хуй',
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
