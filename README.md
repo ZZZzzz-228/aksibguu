@@ -48,57 +48,6 @@
 | 38.02.01 | Экономика и бухгалтерский учет |
 
 
-## Структура проекта
-lib/
-
-├── main.dart # Точка входа, SplashScreen
-
-└── screens/
-
-
-├── widgets/
- 
-│   └── centered_app_bar_title.dart # Общий виджет шапки «Центр Карьеры»
- 
-├── guest/                          # Экраны для гостей/абитуриентов
- 
-│   ├── guest_main_screen.dart      # Главный экран с нижней навигацией
- 
-│   ├── about_college_screen.dart   # О колледже, специальности, обучение
- 
-│   ├── guest_contacts_screen.dart  # Контакты колледжа
- 
-│   ├── guest_profile_screen.dart   # Вход в личный кабинет
- 
-│   ├── career_guidance_screen.dart # Профориентационный тест
- 
-│   └── document_submission_screen.dart # Подача документов
- 
-└── student/                        # Экраны для студентов
- 
-   ├── student_main_screen.dart    # Главный экран студента
- 
-   ├── student_home_screen.dart    # Новости и истории
- 
-   ├── student_schedule_screen.dart # Расписание
- 
-   ├── student_vacancies_screen.dart # Вакансии
- 
-   ├── student_contacts_screen.dart # Контакты
- 
-   └── student_profile_screen.dart  # Профиль студента
-assets/
-
-├── images/ # Изображения (логотип, фото, новости, истории)
-
-├── icons/
-
-│ ├── guest/ # Иконки навигации для гостей
-
-│ └── student/ # Иконки навигации для студентов
-
-└── docs/ # PDF-бланки (заявление, согласие на обработку ПД)
-
 ## Навигация в приложении
 Режим гостя (3 вкладки)
 Контакты — информация о колледже и директоре
