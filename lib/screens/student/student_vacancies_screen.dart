@@ -56,7 +56,7 @@ class _StudentVacanciesScreenState extends State<StudentVacanciesScreen> {
                     controller: _searchController,
                     onSubmitted: (_) => _search(),
                     decoration: InputDecoration(
-                      hintText: 'Поиск вакансий...',
+                      hintText: 'хуй',
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
