@@ -2,9 +2,46 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../data/api/api_client.dart';
+import '../../data/session/app_session.dart';
 import '../widgets/centered_app_bar_title.dart';
 import 'career_guidance_screen.dart';
 import 'document_submission_screen.dart';
+
+String _toAbsoluteUrl(String baseUrl, String value) {
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value;
+  }
+  final base = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+  if (value.startsWith('/')) {
+    return '$base$value';
+  }
+  return '$base/$value';
+}
+
+Widget _imageFromPath(
+  String baseUrl,
+  String path, {
+  required BoxFit fit,
+  Widget? errorFallback,
+}) {
+  final p = path.trim();
+  if (p.isEmpty) {
+    return errorFallback ?? const SizedBox.shrink();
+  }
+  if (p.startsWith('assets/')) {
+    return Image.asset(
+      p,
+      fit: fit,
+      errorBuilder: (context, error, stackTrace) => errorFallback ?? const SizedBox.shrink(),
+    );
+  }
+  return Image.network(
+    _toAbsoluteUrl(baseUrl, p),
+    fit: fit,
+    errorBuilder: (context, error, stackTrace) => errorFallback ?? const SizedBox.shrink(),
+  );
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // Избранные специальности ("звёздочка")
 // ─────────────────────────────────────────────────────────────────────────────
@@ -247,6 +284,15 @@ const List<EducationProgram> educationPrograms = [
     format: 'Очно, 2 раза в неделю + лабораторные работы', imagePath: 'assets/images/education/physics.png',
   ),
 ];
+
+String _educationProgramTypeLabel(EducationType t) {
+  switch (t) {
+    case EducationType.additional:
+      return 'Доп. образование';
+    case EducationType.courses:
+      return 'Курсы';
+  }
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // Мероприятия (истории)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -362,6 +408,89 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
   EducationFilter _educationFilter = EducationFilter.additional;
   final PageController _educationController = PageController(viewportFraction: 0.86, initialPage: 0);
   int _currentEducationPage = 0;
+  final ApiClient _api = AppSession.apiClient;
+  PageContentItem? _cmsAboutCollege;
+  List<Specialty> _specialtiesUi = specialties;
+  List<Partner> _partnersUi = partners;
+
+  Future<void> _loadCms() async {
+    try {
+      final page = await _api.fetchPageBySlug('about-college');
+      final cmsSpecialties = await _api.fetchSpecialties();
+      final cmsPartners = await _api.fetchPartners();
+
+      final specByCode = <String, SpecialtyItem>{
+        for (final s in cmsSpecialties) s.code.trim(): s,
+      };
+
+      final mergedSpecialties = specialties.map((s) {
+        final cms = specByCode[s.code.trim()];
+        if (cms == null) return s;
+        return Specialty(
+          id: s.id,
+          title: cms.title.isNotEmpty ? cms.title : s.title,
+          shortTitle: s.shortTitle,
+          code: s.code,
+          description: cms.description.isNotEmpty ? cms.description : s.description,
+          duration: s.duration,
+          form: s.form,
+          icon: s.icon,
+          color: s.color,
+          qualification: s.qualification,
+          career: s.career,
+          skills: s.skills,
+          salary: s.salary,
+          imagePath: cms.imageUrl.isNotEmpty ? cms.imageUrl : s.imagePath,
+        );
+      }).toList(growable: false);
+
+      final fallbackByName = <String, Partner>{
+        for (final p in partners) p.name.trim(): p,
+      };
+
+      const icons = <IconData>[
+        Icons.handshake,
+        Icons.business,
+        Icons.precision_manufacturing,
+        Icons.satellite_alt,
+        Icons.engineering,
+        Icons.public,
+      ];
+      const colors = <Color>[
+        Color(0xFF1A237E),
+        Color(0xFF00695C),
+        Color(0xFF1565C0),
+        Color(0xFF2E7D32),
+        Color(0xFFE65100),
+        Color(0xFF283593),
+      ];
+
+      final mergedPartners = cmsPartners.isEmpty
+          ? partners
+          : cmsPartners.asMap().entries.map((e) {
+              final i = e.key;
+              final cms = e.value;
+              final fb = fallbackByName[cms.name.trim()];
+              return Partner(
+                name: cms.name.isNotEmpty ? cms.name : (fb?.name ?? 'Партнер'),
+                description: cms.description.isNotEmpty ? cms.description : (fb?.description ?? ''),
+                icon: fb?.icon ?? icons[i % icons.length],
+                color: fb?.color ?? colors[i % colors.length],
+                url: cms.websiteUrl.isNotEmpty ? cms.websiteUrl : (fb?.url ?? ''),
+                imagePath: cms.logoUrl.isNotEmpty ? cms.logoUrl : (fb?.imagePath ?? ''),
+              );
+            }).toList(growable: false);
+
+      if (!mounted) return;
+      setState(() {
+        _cmsAboutCollege = page;
+        _specialtiesUi = mergedSpecialties;
+        _partnersUi = mergedPartners;
+      });
+    } catch (_) {
+      // fallback: keep static data
+    }
+  }
   List<EducationProgram> get _filteredEducationPrograms {
     final type = _educationFilter == EducationFilter.additional ? EducationType.additional : EducationType.courses;
     return educationPrograms.where((p) => p.type == type).toList();
@@ -370,6 +499,7 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    unawaited(_loadCms());
   }
   void _onScroll() {
     final shouldShow = _scrollController.offset > 10;
@@ -388,7 +518,6 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final isSmallScreen = screenWidth < 360;
     final isLargeScreen = screenWidth > 600;
     final horizontalPadding = isLargeScreen ? 24.0 : 16.0;
@@ -469,11 +598,34 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
                 ),
                 const SizedBox(height: 28),
                 // ── 3) СПЕЦИАЛЬНОСТИ ──────────────────────────────────────────
-                Text('Специальности', style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Специальности',
+                        style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AllSpecialtiesScreen(
+                              specialties: _specialtiesUi,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Все'),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 ValueListenableBuilder<Set<String>>(
                   valueListenable: FavoriteSpecialtyStore.instance.favorites,
                   builder: (context, favorites, _) {
+                    final list = _specialtiesUi;
                     return Column(
                       children: [
                         SizedBox(
@@ -481,10 +633,10 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
                           child: PageView.builder(
                             controller: _specialtyController,
                             padEnds: false,
-                            itemCount: specialties.length,
+                            itemCount: list.length,
                             onPageChanged: (i) => setState(() => _currentSpecialtyPage = i),
                             itemBuilder: (context, index) {
-                              final spec = specialties[index];
+                              final spec = list[index];
                               return _SpecialtyCard(
                                 specialty: spec,
                                 isFavorite: favorites.contains(spec.id),
@@ -497,7 +649,7 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
                         const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(specialties.length, (i) {
+                          children: List.generate(list.length, (i) {
                             final active = i == _currentSpecialtyPage;
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 250),
@@ -533,7 +685,27 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
                 ),
                 const SizedBox(height: 28),
                 // ── 4) ОБУЧЕНИЕ ───────────────────────────────────────────────
-                Text('Обучение', style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Обучение',
+                        style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AllEducationProgramsScreen(programs: educationPrograms),
+                          ),
+                        );
+                      },
+                      child: const Text('Все'),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -586,8 +758,8 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: partnerCrossAxisCount, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: partnerAspectRatio),
-                  itemCount: partners.length,
-                  itemBuilder: (context, i) => _buildPartnerCard(partners[i]),
+                  itemCount: _partnersUi.length,
+                  itemBuilder: (context, i) => _buildPartnerCard(_partnersUi[i]),
                 ),
               ],
             ),
@@ -624,6 +796,7 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
     );
   }
   Widget _buildPartnerCard(Partner p) {
+    final baseUrl = AppSession.apiClient.baseUrl;
     return GestureDetector(
       onTap: () async {
         final uri = Uri.parse(p.url);
@@ -640,8 +813,11 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(p.imagePath, width: 48, height: 48, fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+              child: _imageFromPath(
+                baseUrl,
+                p.imagePath,
+                fit: BoxFit.cover,
+                errorFallback: Container(
                   width: 48, height: 48,
                   decoration: BoxDecoration(color: p.color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
                   child: Icon(p.icon, color: p.color, size: 22),
@@ -658,6 +834,648 @@ class _AboutCollegeScreenState extends State<AboutCollegeScreen> {
     );
   }
 }
+
+class AllSpecialtiesScreen extends StatefulWidget {
+  const AllSpecialtiesScreen({super.key, required this.specialties});
+
+  final List<Specialty> specialties;
+
+  @override
+  State<AllSpecialtiesScreen> createState() => _AllSpecialtiesScreenState();
+}
+
+class _AllSpecialtiesScreenState extends State<AllSpecialtiesScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  bool _showScrolledTitle = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final show = _scrollController.offset > 10;
+    if (show != _showScrolledTitle) {
+      setState(() => _showScrolledTitle = show);
+    }
+  }
+
+  List<Specialty> _filteredSpecialties() {
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) return widget.specialties;
+    bool matches(Specialty s) {
+      return s.title.toLowerCase().contains(q) ||
+          s.shortTitle.toLowerCase().contains(q) ||
+          s.id.toLowerCase().contains(q) ||
+          s.code.toLowerCase().contains(q) ||
+          s.description.toLowerCase().contains(q) ||
+          s.form.toLowerCase().contains(q) ||
+          s.duration.toLowerCase().contains(q) ||
+          s.qualification.toLowerCase().contains(q) ||
+          s.career.toLowerCase().contains(q) ||
+          s.skills.toLowerCase().contains(q) ||
+          s.salary.toLowerCase().contains(q);
+    }
+
+    return widget.specialties.where(matches).toList(growable: false);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseUrl = AppSession.apiClient.baseUrl;
+    final filtered = _filteredSpecialties();
+    return Scaffold(
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              snap: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              automaticallyImplyLeading: false,
+              toolbarHeight: 74,
+              flexibleSpace: _FrostedPushedHeader(
+                showScrolledTitle: _showScrolledTitle,
+                onBack: () => Navigator.pop(context),
+                scrolledTitle: 'Все специальности',
+                alwaysShowTitle: true,
+              ),
+            ),
+          ];
+        },
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            TextField(
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: 'Поиск по названию, коду, описанию…',
+                prefixIcon: const Icon(Icons.search, color: Colors.black45),
+                suffixIcon: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.black45),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      ),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (filtered.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Center(
+                  child: Text(
+                    widget.specialties.isEmpty
+                        ? 'Список специальностей пуст'
+                        : 'Ничего не найдено — попробуйте другой запрос',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                  ),
+                ),
+              )
+            else
+              ...List.generate(filtered.length, (index) {
+                final spec = filtered[index];
+                return Padding(
+                  padding: EdgeInsets.only(top: index == 0 ? 0 : 12),
+                  child: _AllSpecialtiesRectCard(
+                    specialty: spec,
+                    baseUrl: baseUrl,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SpecialtyDetailScreen(specialty: spec),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Прямоугольная карточка специальности: слева фото, справа текст.
+class _AllSpecialtiesRectCard extends StatelessWidget {
+  const _AllSpecialtiesRectCard({
+    required this.specialty,
+    required this.baseUrl,
+    required this.onTap,
+  });
+
+  final Specialty specialty;
+  final String baseUrl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: 112,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _imageFromPath(
+                          baseUrl,
+                          specialty.imagePath,
+                          fit: BoxFit.cover,
+                          errorFallback: ColoredBox(color: specialty.color.withOpacity(0.35)),
+                        ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.black.withOpacity(0.12),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            specialty.title,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              height: 1.25,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: specialty.color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              specialty.code,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: specialty.color,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  specialty.duration,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.school_outlined, size: 14, color: Colors.grey.shade600),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  specialty.form,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _AllEducationKindFilter { all, additional, courses }
+
+class AllEducationProgramsScreen extends StatefulWidget {
+  const AllEducationProgramsScreen({super.key, required this.programs});
+
+  final List<EducationProgram> programs;
+
+  @override
+  State<AllEducationProgramsScreen> createState() => _AllEducationProgramsScreenState();
+}
+
+class _AllEducationProgramsScreenState extends State<AllEducationProgramsScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  bool _showScrolledTitle = false;
+  _AllEducationKindFilter _kindFilter = _AllEducationKindFilter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final show = _scrollController.offset > 10;
+    if (show != _showScrolledTitle) {
+      setState(() => _showScrolledTitle = show);
+    }
+  }
+
+  List<EducationProgram> _visiblePrograms() {
+    Iterable<EducationProgram> list = widget.programs;
+    switch (_kindFilter) {
+      case _AllEducationKindFilter.additional:
+        list = list.where((p) => p.type == EducationType.additional);
+        break;
+      case _AllEducationKindFilter.courses:
+        list = list.where((p) => p.type == EducationType.courses);
+        break;
+      case _AllEducationKindFilter.all:
+        break;
+    }
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) {
+      return list.toList(growable: false);
+    }
+    return list.where((p) {
+      final typeLabel = _educationProgramTypeLabel(p.type).toLowerCase();
+      return p.title.toLowerCase().contains(q) ||
+          p.description.toLowerCase().contains(q) ||
+          p.duration.toLowerCase().contains(q) ||
+          p.details.toLowerCase().contains(q) ||
+          p.targetAudience.toLowerCase().contains(q) ||
+          p.outcome.toLowerCase().contains(q) ||
+          p.format.toLowerCase().contains(q) ||
+          typeLabel.contains(q);
+    }).toList(growable: false);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseUrl = AppSession.apiClient.baseUrl;
+    final filtered = _visiblePrograms();
+    return Scaffold(
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              snap: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              automaticallyImplyLeading: false,
+              toolbarHeight: 74,
+              flexibleSpace: _FrostedPushedHeader(
+                showScrolledTitle: _showScrolledTitle,
+                onBack: () => Navigator.pop(context),
+                scrolledTitle: 'Все обучения',
+                alwaysShowTitle: true,
+              ),
+            ),
+          ];
+        },
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          children: [
+            TextField(
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                hintText: 'Поиск по названию, описанию, формату…',
+                prefixIcon: const Icon(Icons.search, color: Colors.black45),
+                suffixIcon: _searchController.text.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.black45),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      ),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('Все'),
+                  selected: _kindFilter == _AllEducationKindFilter.all,
+                  onSelected: (v) {
+                    if (!v) return;
+                    setState(() => _kindFilter = _AllEducationKindFilter.all);
+                  },
+                  selectedColor: const Color(0xFF4A90E2).withOpacity(0.15),
+                  labelStyle: TextStyle(
+                    color: _kindFilter == _AllEducationKindFilter.all ? const Color(0xFF4A90E2) : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                ChoiceChip(
+                  label: const Text('Доп. образование'),
+                  selected: _kindFilter == _AllEducationKindFilter.additional,
+                  onSelected: (v) {
+                    if (!v) return;
+                    setState(() => _kindFilter = _AllEducationKindFilter.additional);
+                  },
+                  selectedColor: const Color(0xFF4A90E2).withOpacity(0.15),
+                  labelStyle: TextStyle(
+                    color: _kindFilter == _AllEducationKindFilter.additional ? const Color(0xFF4A90E2) : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                ChoiceChip(
+                  label: const Text('Курсы'),
+                  selected: _kindFilter == _AllEducationKindFilter.courses,
+                  onSelected: (v) {
+                    if (!v) return;
+                    setState(() => _kindFilter = _AllEducationKindFilter.courses);
+                  },
+                  selectedColor: const Color(0xFF4A90E2).withOpacity(0.15),
+                  labelStyle: TextStyle(
+                    color: _kindFilter == _AllEducationKindFilter.courses ? const Color(0xFF4A90E2) : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (filtered.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Center(
+                  child: Text(
+                    widget.programs.isEmpty
+                        ? 'Список программ пуст'
+                        : 'Ничего не найдено — смените фильтр или запрос',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+                  ),
+                ),
+              )
+            else
+              ...List.generate(filtered.length, (index) {
+                final program = filtered[index];
+                return Padding(
+                  padding: EdgeInsets.only(top: index == 0 ? 0 : 12),
+                  child: _AllEducationRectCard(
+                    program: program,
+                    baseUrl: baseUrl,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EducationDetailScreen(program: program),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AllEducationRectCard extends StatelessWidget {
+  const _AllEducationRectCard({
+    required this.program,
+    required this.baseUrl,
+    required this.onTap,
+  });
+
+  final EducationProgram program;
+  final String baseUrl;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final typeLabel = _educationProgramTypeLabel(program.type);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    width: 112,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        _imageFromPath(
+                          baseUrl,
+                          program.imagePath,
+                          fit: BoxFit.cover,
+                          errorFallback: ColoredBox(color: program.color.withOpacity(0.35)),
+                        ),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.black.withOpacity(0.12),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            program.title,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              height: 1.25,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: program.color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              typeLabel,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: program.color,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  program.duration,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.format_list_bulleted, size: 14, color: Colors.grey.shade600),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  program.format,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Frosted header: при скролле иконка и «Центр карьеры» полностью исчезают,
 // «Главная» плавно появляется по центру.
@@ -730,6 +1548,7 @@ class _SpecialtyCard extends StatelessWidget {
   const _SpecialtyCard({required this.specialty, required this.isFavorite, required this.onToggleFavorite, required this.onOpen});
   @override
   Widget build(BuildContext context) {
+    final baseUrl = AppSession.apiClient.baseUrl;
     return GestureDetector(
       onTap: onOpen,
       child: Container(
@@ -742,8 +1561,11 @@ class _SpecialtyCard extends StatelessWidget {
               child: Stack(children: [
                 // Фоновая картинка специальности
                 Positioned.fill(
-                  child: Image.asset(specialty.imagePath, fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(color: specialty.color),
+                  child: _imageFromPath(
+                    baseUrl,
+                    specialty.imagePath,
+                    fit: BoxFit.cover,
+                    errorFallback: Container(color: specialty.color),
                   ),
                 ),
                 Positioned.fill(child: Container(color: specialty.color.withOpacity(0.7))),
@@ -1156,86 +1978,13 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: ElevatedButton(
                   onPressed: () {
-                    final story = widget.stories[_currentIndex];
                     _timer?.cancel();
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      isScrollControlled: true,
-                      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-                      builder: (_) => ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-                          child: Container(
-                            color: Colors.black.withOpacity(0.70),
-                            child: DraggableScrollableSheet(
-                              initialChildSize: 0.7,
-                              minChildSize: 0.4,
-                              maxChildSize: 0.9,
-                              expand: false,
-                              builder: (_, scrollController) => SingleChildScrollView(
-                                controller: scrollController,
-                                padding: const EdgeInsets.all(24),
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Center(child: Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 16), decoration: BoxDecoration(color: Colors.white.withOpacity(0.5), borderRadius: BorderRadius.circular(2)))),
-                                  Text(story.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                                  const SizedBox(height: 16),
-                                  // Дата и время
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.10), borderRadius: BorderRadius.circular(12)),
-                                    child: Column(children: [
-                                      Row(children: [
-                                        const Icon(Icons.calendar_today, size: 18, color: Colors.white),
-                                        const SizedBox(width: 8),
-                                        Text(story.date, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-                                      ]),
-                                      const SizedBox(height: 8),
-                                      Row(children: [
-                                        const Icon(Icons.access_time, size: 18, color: Colors.white),
-                                        const SizedBox(width: 8),
-                                        Text(story.time, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white)),
-                                      ]),
-                                      const SizedBox(height: 8),
-                                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                        const Icon(Icons.location_on, size: 18, color: Colors.white),
-                                        const SizedBox(width: 8),
-                                        Expanded(child: Text(story.location, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white))),
-                                      ]),
-                                    ]),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Описание
-                                  const Text('О мероприятии', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                                  const SizedBox(height: 8),
-                                  Text(story.content, style: const TextStyle(fontSize: 15, color: Colors.white, height: 1.6)),
-                                  const SizedBox(height: 16),
-                                  // Расписание
-                                  const Text('Программа', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.10), borderRadius: BorderRadius.circular(12)),
-                                    child: Text(story.schedule, style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.7)),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  SizedBox(width: double.infinity, child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: BackdropFilter(
-                                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                      child: ElevatedButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.2), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
-                                        child: const Text('Закрыть'),
-                                      ),
-                                    ),
-                                  )),
-                                ]),
-                              ),
-                            ),
-                          ),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EventsFeedScreen(
+                          stories: widget.stories,
+                          initialIndex: _currentIndex,
                         ),
                       ),
                     ).then((_) => _startTimer());
@@ -1283,13 +2032,346 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     ]);
   }
 }
+
+class EventsFeedScreen extends StatefulWidget {
+  const EventsFeedScreen({
+    super.key,
+    required this.stories,
+    required this.initialIndex,
+  });
+
+  final List<StoryData> stories;
+  final int initialIndex;
+
+  @override
+  State<EventsFeedScreen> createState() => _EventsFeedScreenState();
+}
+
+class _EventsFeedScreenState extends State<EventsFeedScreen> {
+  late final ScrollController _scrollController;
+  late int _selectedIndex;
+  bool _showScrolledTitle = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex.clamp(0, widget.stories.length - 1);
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      final maxExt = _scrollController.position.maxScrollExtent;
+      final targetOffset = (_selectedIndex * 340.0).clamp(0.0, maxExt);
+      _scrollController.jumpTo(targetOffset);
+    });
+  }
+
+  void _onScroll() {
+    final shouldShow = _scrollController.offset > 10;
+    if (shouldShow != _showScrolledTitle) {
+      setState(() => _showScrolledTitle = shouldShow);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseUrl = AppSession.apiClient.baseUrl;
+    return Scaffold(
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              snap: false,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              automaticallyImplyLeading: false,
+              toolbarHeight: 74,
+              flexibleSpace: _FrostedPushedHeader(
+                showScrolledTitle: _showScrolledTitle,
+                onBack: () => Navigator.pop(context),
+                scrolledTitle: 'Мероприятия',
+              ),
+            ),
+          ];
+        },
+        body: ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          itemCount: widget.stories.length,
+          itemBuilder: (context, index) {
+          final story = widget.stories[index];
+          final isSelected = index == _selectedIndex;
+
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? const Color(0xFF4A90E2) : Colors.grey.shade200,
+                width: isSelected ? 2 : 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => setState(() => _selectedIndex = index),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: SizedBox(
+                      height: 160,
+                      width: double.infinity,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          _imageFromPath(
+                            baseUrl,
+                            story.imagePath,
+                            fit: BoxFit.cover,
+                            errorFallback: Container(color: Colors.grey.shade200),
+                          ),
+                          Container(color: Colors.black.withOpacity(0.15)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          story.title,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today, size: 14, color: Colors.black54),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(story.date, style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w600))),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time, size: 14, color: Colors.black54),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(story.time, style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w600))),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.location_on, size: 14, color: Colors.black54),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                story.location,
+                                style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          story.content,
+                          maxLines: isSelected ? 999 : 2,
+                          overflow: isSelected ? TextOverflow.visible : TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.45),
+                        ),
+                        if (isSelected) ...[
+                          const SizedBox(height: 12),
+                          const Text('Программа', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+                          const SizedBox(height: 6),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4A90E2).withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF4A90E2).withOpacity(0.15)),
+                            ),
+                            child: Text(
+                              story.schedule,
+                              style: const TextStyle(fontSize: 13, height: 1.55),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            isSelected ? 'Выбрано' : 'Нажмите, чтобы открыть',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: isSelected ? const Color(0xFF4A90E2) : Colors.black45,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        ),
+      ),
+    );
+  }
+}
+
+/// Шапка вложенных экранов (мероприятия, все специальности): до скролла — назад и опционально бренд или постоянный [scrolledTitle]; после — матовый фон.
+class _FrostedPushedHeader extends StatelessWidget {
+  const _FrostedPushedHeader({
+    required this.showScrolledTitle,
+    required this.onBack,
+    required this.scrolledTitle,
+    this.showBranding = true,
+    this.alwaysShowTitle = false,
+  });
+
+  final bool showScrolledTitle;
+  final VoidCallback onBack;
+  final String scrolledTitle;
+  final bool showBranding;
+  /// Если true — [scrolledTitle] всегда в шапке (например «Все специальности»); матовый слой по-прежнему только при прокрутке.
+  final bool alwaysShowTitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 220),
+            opacity: showScrolledTitle ? 1 : 0,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: Container(color: Colors.white.withOpacity(0.72)),
+            ),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                    onPressed: onBack,
+                    tooltip: 'Назад',
+                  ),
+                  Expanded(
+                    child: alwaysShowTitle
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                scrolledTitle,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 220),
+                                opacity: showScrolledTitle ? 0 : 1,
+                                child: showBranding ? const CenteredAppBarTitle() : const SizedBox.shrink(),
+                              ),
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 220),
+                                opacity: showScrolledTitle ? 1 : 0,
+                                child: AnimatedSlide(
+                                  duration: const Duration(milliseconds: 220),
+                                  offset: showScrolledTitle ? Offset.zero : const Offset(0, -0.15),
+                                  child: Text(
+                                    scrolledTitle,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Экран «О колледже» — обогащённая версия
 // ─────────────────────────────────────────────────────────────────────────────
-class CollegeInfoScreen extends StatelessWidget {
+class CollegeInfoScreen extends StatefulWidget {
   const CollegeInfoScreen({super.key});
+
+  @override
+  State<CollegeInfoScreen> createState() => _CollegeInfoScreenState();
+}
+
+class _CollegeInfoScreenState extends State<CollegeInfoScreen> {
+  final ApiClient _api = AppSession.apiClient;
+  late Future<PageContentItem?> _pageFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageFuture = _api.fetchPageBySlug('about-college');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final baseUrl = AppSession.apiClient.baseUrl;
     return Scaffold(
       appBar: AppBar(leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)), centerTitle: true, title: const Text('О колледже')),
       body: SingleChildScrollView(
@@ -1301,8 +2383,18 @@ class CollegeInfoScreen extends StatelessWidget {
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: Colors.grey[300]),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset('assets/images/college/college_building.jpg', fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.image, size: 64, color: Colors.grey)),
+              child: FutureBuilder<PageContentItem?>(
+                future: _pageFuture,
+                builder: (context, snapshot) {
+                  final page = snapshot.data;
+                  final cover = page?.coverImageUrl ?? '';
+                  return _imageFromPath(
+                    baseUrl,
+                    cover.isNotEmpty ? cover : 'assets/images/college/college_building.jpg',
+                    fit: BoxFit.cover,
+                    errorFallback: const Center(child: Icon(Icons.image, size: 64, color: Colors.grey)),
+                  );
+                },
               ),
             ),
           ),
@@ -1310,21 +2402,39 @@ class CollegeInfoScreen extends StatelessWidget {
           // ── Наша миссия ──
           const Text('Наша миссия', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text(
-            'Подготовка высококвалифицированных специалистов, готовых к успешной профессиональной деятельности в современных условиях. '
-                'Мы стремимся воспитать не только профессионалов, но и ответственных граждан, способных внести значимый вклад в развитие общества и технологий.',
-            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+          FutureBuilder<PageContentItem?>(
+            future: _pageFuture,
+            builder: (context, snapshot) {
+              final page = snapshot.data;
+              final lead = (page?.lead ?? '').trim();
+              return Text(
+                lead.isNotEmpty
+                    ? lead
+                    : 'Подготовка высококвалифицированных специалистов, готовых к успешной профессиональной деятельности в современных условиях. '
+                        'Мы стремимся воспитать не только профессионалов, но и ответственных граждан, способных внести значимый вклад в развитие общества и технологий.',
+                style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+              );
+            },
           ),
           const SizedBox(height: 20),
           // ── О нас ──
           const Text('О нас', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text(
-            'Аэрокосмический колледж СибГУ им. академика М.Ф. Решетнёва — одно из ведущих учебных заведений среднего профессионального образования в Красноярском крае. '
-                'Колледж является структурным подразделением Сибирского государственного университета науки и технологий и имеет богатую историю подготовки специалистов для авиационно-космической, машиностроительной и IT-отраслей.\n\n'
-                'На протяжении десятилетий наш колледж выпускает квалифицированных техников, программистов, инженеров и экономистов, которые успешно трудоустраиваются на ведущих предприятиях региона и страны. '
-                'Тесное сотрудничество с промышленными партнёрами — ОКБ «Зенит», КрасМаш, АО «РЕШЕТНЁВ» — обеспечивает студентам возможность проходить производственную практику на реальном оборудовании.',
-            style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+          FutureBuilder<PageContentItem?>(
+            future: _pageFuture,
+            builder: (context, snapshot) {
+              final page = snapshot.data;
+              final body = (page?.body ?? '').trim();
+              return Text(
+                body.isNotEmpty
+                    ? body
+                    : 'Аэрокосмический колледж СибГУ им. академика М.Ф. Решетнёва — одно из ведущих учебных заведений среднего профессионального образования в Красноярском крае. '
+                        'Колледж является структурным подразделением Сибирского государственного университета науки и технологий и имеет богатую историю подготовки специалистов для авиационно-космической, машиностроительной и IT-отраслей.\n\n'
+                        'На протяжении десятилетий наш колледж выпускает квалифицированных техников, программистов, инженеров и экономистов, которые успешно трудоустраиваются на ведущих предприятиях региона и страны. '
+                        'Тесное сотрудничество с промышленными партнёрами — ОКБ «Зенит», КрасМаш, АО «РЕШЕТНЁВ» — обеспечивает студентам возможность проходить производственную практику на реальном оборудовании.',
+                style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.6),
+              );
+            },
           ),
           const SizedBox(height: 24),
           // ── Колледж в цифрах ──
@@ -1500,6 +2610,8 @@ class _EnrollmentFormScreenState extends State<EnrollmentFormScreen> {
   final _phoneController = TextEditingController();
   final _messengerController = TextEditingController();
   bool _isSubmitted = false;
+  bool _isSubmitting = false;
+  int _applicationId = 0;
   @override
   void dispose() {
     _nameController.dispose();
@@ -1507,9 +2619,30 @@ class _EnrollmentFormScreenState extends State<EnrollmentFormScreen> {
     _messengerController.dispose();
     super.dispose();
   }
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isSubmitted = true);
+  Future<void> _submitForm() async {
+    if (_isSubmitting) return;
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSubmitting = true);
+    try {
+      final id = await AppSession.apiClient.submitPublicApplication(
+        type: 'courses',
+        fullName: _nameController.text.trim(),
+        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+        payload: {
+          'program_title': widget.programTitle,
+          'preferred_messenger': _messengerController.text.trim(),
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        _applicationId = id;
+        _isSubmitted = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка отправки: $e')));
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
   @override
@@ -1544,6 +2677,10 @@ class _EnrollmentFormScreenState extends State<EnrollmentFormScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.6),
             ),
+            if (_applicationId > 0) ...[
+              const SizedBox(height: 10),
+              Text('Номер заявки: $_applicationId', style: const TextStyle(fontSize: 13, color: Colors.black54)),
+            ],
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -1648,7 +2785,7 @@ class _EnrollmentFormScreenState extends State<EnrollmentFormScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _submitForm,
+                onPressed: _isSubmitting ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: widget.programColor,
                   foregroundColor: Colors.white,
@@ -1656,7 +2793,9 @@ class _EnrollmentFormScreenState extends State<EnrollmentFormScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 0,
                 ),
-                child: const Text('Отправить заявку', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                child: _isSubmitting
+                    ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Отправить заявку', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
               ),
             ),
           ],

@@ -1,9 +1,27 @@
 import 'package:flutter/material.dart';
 import '../guest/guest_main_screen.dart';
-import '../widgets/centered_app_bar_title.dart'; // ✅ Добавлен импорт
+import '../../data/api/api_client.dart';
+import '../../data/session/app_session.dart';
+import 'student_portfolio_screen.dart';
+import 'student_resume_screen.dart';
+import '../widgets/centered_app_bar_title.dart';
 
-class StudentProfileScreen extends StatelessWidget {
+class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
+
+  @override
+  State<StudentProfileScreen> createState() => _StudentProfileScreenState();
+}
+
+class _StudentProfileScreenState extends State<StudentProfileScreen> {
+  final ApiClient _api = AppSession.apiClient;
+  late Future<StudentProfileItem?> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = _api.fetchStudentProfile();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,20 +47,41 @@ class StudentProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Иванов Иван Иванович',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Студент группы ИСП 1-22',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black54,
-              ),
+            FutureBuilder<StudentProfileItem?>(
+              future: _profileFuture,
+              builder: (context, snapshot) {
+                final profile = snapshot.data;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (profile == null) {
+                  return const Text('Профиль студента не заполнен');
+                }
+                return Column(
+                  children: [
+                    Text(
+                      profile.fullName.isEmpty ? 'Студент' : profile.fullName,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      profile.groupTitle.isEmpty ? 'Группа не назначена' : 'Группа: ${profile.groupTitle}',
+                      style: const TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                    if (profile.curatorName.isNotEmpty)
+                      Text(
+                        'Куратор: ${profile.curatorName}',
+                        style: const TextStyle(fontSize: 14, color: Colors.black54),
+                      ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 24),
 
@@ -51,14 +90,24 @@ class StudentProfileScreen extends StatelessWidget {
               context,
               'Моё портфолио',
               Icons.folder_open,
-                  () {},
+                  () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StudentPortfolioScreen()),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _buildProfileButton(
               context,
               'Создание резюме',
               Icons.description,
-                  () {},
+                  () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StudentResumeScreen()),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _buildProfileButton(

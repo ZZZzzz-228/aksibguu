@@ -1,6 +1,10 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../data/api/api_client.dart';
+import '../../data/cache/guest_staff_cache.dart';
 import '../widgets/centered_app_bar_title.dart';
 class GuestContactsScreen extends StatefulWidget {
   const GuestContactsScreen({super.key});
@@ -9,11 +13,61 @@ class GuestContactsScreen extends StatefulWidget {
 }
 class _GuestContactsScreenState extends State<GuestContactsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final _apiClient = ApiClient(
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:8000',
+    ),
+  );
   bool _showMainTitle = false;
+
+  /// Пока true и список пуст — показываем индикатор первой загрузки.
+  bool _staffInitialLoading = true;
+  List<StaffMemberItem> _staffList = [];
+  bool _staffFromCacheOnly = false;
+  String? _staffError;
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadStaff();
+  }
+
+  Future<void> _loadStaff() async {
+    final cached = await GuestStaffCache.read();
+    if (!mounted) return;
+    if (cached != null && cached.isNotEmpty) {
+      setState(() {
+        _staffList = cached;
+        _staffInitialLoading = false;
+        _staffFromCacheOnly = false;
+        _staffError = null;
+      });
+    }
+    try {
+      final fresh = await _apiClient.fetchStaff();
+      await GuestStaffCache.save(fresh);
+      if (!mounted) return;
+      setState(() {
+        _staffList = fresh;
+        _staffInitialLoading = false;
+        _staffFromCacheOnly = false;
+        _staffError = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _staffInitialLoading = false;
+        if (_staffList.isEmpty) {
+          _staffError = e.toString();
+          _staffFromCacheOnly = false;
+        } else {
+          _staffError = null;
+          _staffFromCacheOnly = true;
+        }
+      });
+    }
   }
   void _onScroll() {
     final shouldShow = _scrollController.offset > 10;
@@ -173,118 +227,7 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Карточка директора
-                _buildStaffCard(
-                  name: 'Тимошев Павел Викторович',
-                  position: 'Директор Аэрокосмического Колледжа',
-                  email: 'ak@sibsau.ru',
-                  phone: '2919115',
-                  hours: 'Часы приёма: вторник, четверг с 14:00 до 16:00',
-                  photo: 'assets/images/contacts/director_photo.png',
-                  gradientColors: const [Color(0xFF4A90E2), Color(0xFF64B5F6)],
-                ),
-                const SizedBox(height: 16),
-                // 11 дополнительных карточек сотрудников
-                _buildStaffCard(
-                  name: 'Шувалова М.А.',
-                  position: 'Заместитель директора по Учебно-методической работе',
-                  email: 'shuvalovav@sibsau.ru',
-                  phone: '+7(391) 291-91-15',
-                  hours: 'Часы приёма: понедельник, среда с 10:00 до 12:00',
-                  photo: 'assets/images/contacts/staff_1.png',
-                  gradientColors: const [Color(0xFF42A5F5), Color(0xFF90CAF9)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Чепенко С.А.',
-                  position: 'Заместитель директора по Учебно-воспитательной работе',
-                  email: 'students@sibsau.ru',
-                  phone: '+7 (391) 264-15-88',
-                  hours: 'Часы приёма: вторник, четверг с 10:00 до 12:00',
-                  photo: 'assets/images/contacts/staff_2.png',
-                  gradientColors: const [Color(0xFF66BB6A), Color(0xFFA5D6A7)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Позновский В.А.',
-                  position: 'Заместитель директора по Учебно-производственной работе',
-                  email: 'sidorova@sibsau.ru',
-                  phone: '2641588',
-                  hours: 'Часы приёма: понедельник, пятница с 14:00 до 16:00',
-                  photo: 'assets/images/contacts/staff_3.png',
-                  gradientColors: const [Color(0xFFAB47BC), Color(0xFFCE93D8)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Козырева С.В.',
-                  position: 'Заместитель директора по внебюджетной деятельности',
-                  email: 'kozyrevasv@sibsau.ru',
-                  phone: '+7(391) 291-91-15',
-                  hours: 'Часы приёма: среда с 10:00 до 12:00',
-                  photo: 'assets/images/contacts/staff_4.png',
-                  gradientColors: const [Color(0xFF29B6F6), Color(0xFF81D4FA)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Курдояк Е.Д.',
-                  position: 'Заведующая отделением №1 Направление: «Технология машиностроения»',
-                  email: 'students@sibsau.ru',
-                  phone: '+7 (391) 264-15-88',
-                  hours: 'Часы приёма: вторник с 14:00 до 16:00',
-                  photo: 'assets/images/contacts/staff_5.png',
-                  gradientColors: const [Color(0xFFEF5350), Color(0xFFEF9A9A)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Малиновская Е.А.',
-                  position: 'Заведующая отделением №2 Направления: «Сварочное производство» «Контрольно-измерительные приборы и автоматика» «Эксплуатация летательных аппаратов»',
-                  email: 'students@sibsau.ru',
-                  phone: '+7 (391) 264-15-88',
-                  hours: 'Часы приёма: четверг с 10:00 до 12:00',
-                  photo: 'assets/images/contacts/staff_6.png',
-                  gradientColors: const [Color(0xFFFFA726), Color(0xFFFFCC80)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Кольга Е.В.',
-                  position: 'Заведующая отделением №5 Направление: «Безопасность автоматизированных систем» «Информационные системы и технологии»',
-                  email: 'students@sibsau.ru',
-                  phone: '+7 (391) 264-15-88',
-                  hours: 'Часы приёма: понедельник с 14:00 до 16:00',
-                  photo: 'assets/images/application_logo/icon42.png',
-                  gradientColors: const [Color(0xFF5C6BC0), Color(0xFF9FA8DA)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Гурьянов А.С.',
-                  position: 'Заведующий отделением №6 Направление:«Специальные машины и устройства» «Мобильная робототехника» «Автоматические системы управления»',
-                  email: 'kuznetsov@sibsau.ru',
-                  phone: '2640664',
-                  hours: 'Часы приёма: ежедневно с 09:00 до 12:00',
-                  photo: 'assets/images/application_logo/icon42.png',
-                  gradientColors: const [Color(0xFF26A69A), Color(0xFF80CBC4)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Коткова Е.А.',
-                  position: 'Заведующий отделением №7 Направление:«Безопасность автоматизированных систем» «Информационные системы и технологии»',
-                  email: 'lebedeva@sibsau.ru',
-                  phone: '+7 (391) 264-15-88',
-                  hours: 'Часы приёма: ежедневно с 09:00 до 16:00',
-                  photo: 'assets/images/application_logo/icon42.png',
-                  gradientColors: const [Color(0xFFEC407A), Color(0xFFF48FB1)],
-                ),
-                const SizedBox(height: 16),
-                _buildStaffCard(
-                  name: 'Букалина Д.А.',
-                  position: 'Заведующий отделением №8 Направление:«Сетевое администрирование» «Программирование и программное обеспечение»',
-                  email: 'sokolov@sibsau.ru',
-                  phone: '2640666',
-                  hours: 'Часы приёма: среда, пятница с 10:00 до 14:00',
-                  photo: 'assets/images/application_logo/icon42.png',
-                  gradientColors: const [Color(0xFF7E57C2), Color(0xFFB39DDB)],
-                ),
-                const SizedBox(height: 16),
+                _buildStaffSection(),
               ],
             ),
           ),
@@ -292,13 +235,86 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
       ),
     );
   }
+
+  Widget _buildStaffSection() {
+    if (_staffInitialLoading && _staffList.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_staffError != null && _staffList.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text('Ошибка загрузки сотрудников: $_staffError'),
+      );
+    }
+    if (_staffList.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Text('Список сотрудников пока пуст. Подключитесь к интернету один раз, чтобы подтянуть данные.'),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_staffFromCacheOnly)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Material(
+              color: const Color(0xFFFFF8E1),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    Icon(Icons.wifi_off, size: 20, color: Colors.amber.shade900),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Нет сети — показаны сохранённые карточки. Фото подгрузятся при следующем подключении.',
+                        style: TextStyle(fontSize: 13, color: Colors.amber.shade900),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ...List.generate(_staffList.length, (index) {
+          final staff = _staffList[index];
+          const gradients = [
+            [Color(0xFF4A90E2), Color(0xFF64B5F6)],
+            [Color(0xFF42A5F5), Color(0xFF90CAF9)],
+            [Color(0xFF66BB6A), Color(0xFFA5D6A7)],
+            [Color(0xFFAB47BC), Color(0xFFCE93D8)],
+          ];
+          final gradientColors = gradients[index % gradients.length];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _buildStaffCard(
+              name: staff.fullName,
+              position: staff.positionTitle,
+              email: staff.email,
+              phone: staff.phone,
+              hours: staff.officeHours,
+              photoUrl: staff.photoUrl,
+              gradientColors: gradientColors,
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
   Widget _buildStaffCard({
     required String name,
     required String position,
     required String email,
     required String phone,
     required String hours,
-    required String photo,
+    required String photoUrl,
     required List<Color> gradientColors,
   }) {
     return Container(
@@ -322,10 +338,9 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
               color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 3),
-              image: DecorationImage(
-                image: AssetImage(photo),
-                fit: BoxFit.cover,
-              ),
+            ),
+            child: ClipOval(
+              child: _buildStaffPhoto(photoUrl),
             ),
           ),
           const SizedBox(height: 16),
@@ -422,6 +437,36 @@ class _GuestContactsScreenState extends State<GuestContactsScreen> {
       ),
     );
   }
+
+  Widget _buildStaffPhoto(String photoUrl) {
+    final fallback = Image.asset(
+      'assets/images/application_logo/icon42.png',
+      fit: BoxFit.cover,
+    );
+    if (photoUrl.trim().isEmpty) {
+      return fallback;
+    }
+    final absolute = _toAbsoluteUrl(photoUrl.trim());
+    return Image.network(
+      absolute,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => fallback,
+    );
+  }
+
+  String _toAbsoluteUrl(String value) {
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    final base = _apiClient.baseUrl.endsWith('/')
+        ? _apiClient.baseUrl.substring(0, _apiClient.baseUrl.length - 1)
+        : _apiClient.baseUrl;
+    if (value.startsWith('/')) {
+      return '$base$value';
+    }
+    return '$base/$value';
+  }
+
   Widget _buildContactItem(IconData icon, String text, Color color) {
     return GestureDetector(
       onTap: () async {

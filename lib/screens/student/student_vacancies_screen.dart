@@ -1,8 +1,41 @@
 import 'package:flutter/material.dart';
+import '../../data/api/api_client.dart';
 import '../widgets/centered_app_bar_title.dart'; // ✅ Добавлен импорт
 
-class StudentVacanciesScreen extends StatelessWidget {
+class StudentVacanciesScreen extends StatefulWidget {
   const StudentVacanciesScreen({super.key});
+
+  @override
+  State<StudentVacanciesScreen> createState() => _StudentVacanciesScreenState();
+}
+
+class _StudentVacanciesScreenState extends State<StudentVacanciesScreen> {
+  final _apiClient = ApiClient(
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:8000',
+    ),
+  );
+  final _searchController = TextEditingController();
+  late Future<List<VacancyItem>> _vacanciesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _vacanciesFuture = _apiClient.fetchVacancies();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _search() {
+    setState(() {
+      _vacanciesFuture = _apiClient.fetchVacancies(query: _searchController.text);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +53,8 @@ class StudentVacanciesScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: _searchController,
+                    onSubmitted: (_) => _search(),
                     decoration: InputDecoration(
                       hintText: 'Поиск вакансий...',
                       prefixIcon: const Icon(Icons.search),
@@ -46,7 +81,10 @@ class StudentVacanciesScreen extends StatelessWidget {
                     border: Border.all(color: Colors.grey[300]!),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.filter_list),
+                  child: IconButton(
+                    onPressed: _search,
+                    icon: const Icon(Icons.search),
+                  ),
                 ),
               ],
             ),
@@ -54,30 +92,36 @@ class StudentVacanciesScreen extends StatelessWidget {
 
           // Список вакансий
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _buildVacancyCard(
-                  'Младший программист',
-                  'АЭРОКОС Технологии',
-                  'Москва',
-                  'Полная занятость',
-                  '05.05.2025',
-                  '80 000 — 120 000 ₽',
-                  const Color(0xFF66BB6A),
-                ),
-                const SizedBox(height: 16),
-                _buildVacancyCard(
-                  'Инженер-конструктор',
-                  'АЭРОКОС Технологии',
-                  'Москва',
-                  'Полная занятость',
-                  '05.05.2025',
-                  '100 000 — 120 000 ₽',
-                  const Color(0xFF42A5F5),
-                ),
-                const SizedBox(height: 16),
-              ],
+            child: FutureBuilder<List<VacancyItem>>(
+              future: _vacanciesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('Ошибка загрузки вакансий: ${snapshot.error}'),
+                    ),
+                  );
+                }
+
+                final vacancies = snapshot.data ?? const <VacancyItem>[];
+                if (vacancies.isEmpty) {
+                  return const Center(child: Text('Вакансии не найдены'));
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: vacancies.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final vacancy = vacancies[index];
+                    return _buildVacancyCard(vacancy);
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -85,15 +129,11 @@ class StudentVacanciesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVacancyCard(
-      String title,
-      String company,
-      String location,
-      String employmentType,
-      String publishDate,
-      String salary,
-      Color salaryColor,
-      ) {
+  Widget _buildVacancyCard(VacancyItem vacancy) {
+    final publishDate = vacancy.publishedAt == null
+        ? '-'
+        : '${vacancy.publishedAt!.day.toString().padLeft(2, '0')}.${vacancy.publishedAt!.month.toString().padLeft(2, '0')}.${vacancy.publishedAt!.year}';
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -115,7 +155,7 @@ class StudentVacanciesScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    title,
+                    vacancy.title,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -129,11 +169,11 @@ class StudentVacanciesScreen extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: salaryColor,
+                    color: const Color(0xFF42A5F5),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    salary,
+                    vacancy.salary.isEmpty ? 'Не указана' : vacancy.salary,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -162,7 +202,7 @@ class StudentVacanciesScreen extends StatelessWidget {
                     const Icon(Icons.business, size: 16, color: Colors.black54),
                     const SizedBox(width: 8),
                     Text(
-                      company,
+                      vacancy.company,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black87,
@@ -176,7 +216,7 @@ class StudentVacanciesScreen extends StatelessWidget {
                     const Icon(Icons.location_on, size: 16, color: Colors.black54),
                     const SizedBox(width: 8),
                     Text(
-                      location,
+                      vacancy.city.isEmpty ? 'Не указано' : vacancy.city,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black87,
@@ -190,7 +230,7 @@ class StudentVacanciesScreen extends StatelessWidget {
                     const Icon(Icons.work, size: 16, color: Colors.black54),
                     const SizedBox(width: 8),
                     Text(
-                      employmentType,
+                      vacancy.employmentType.isEmpty ? 'Не указано' : vacancy.employmentType,
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black87,
@@ -214,11 +254,16 @@ class StudentVacanciesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Требования:',
+                  'Описание:',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  vacancy.description.isEmpty ? 'Описание отсутствует' : vacancy.description,
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
                 ),
                 const SizedBox(height: 16),
                 Row(

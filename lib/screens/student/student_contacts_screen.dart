@@ -1,8 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../data/api/api_client.dart';
 import '../widgets/centered_app_bar_title.dart';
-class StudentContactsScreen extends StatelessWidget {
+
+class StudentContactsScreen extends StatefulWidget {
   const StudentContactsScreen({super.key});
+
+  @override
+  State<StudentContactsScreen> createState() => _StudentContactsScreenState();
+}
+
+class _StudentContactsScreenState extends State<StudentContactsScreen> {
+  final _apiClient = ApiClient(
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:8000',
+    ),
+  );
+
+  late Future<List<ContactItem>> _contactsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _contactsFuture = _apiClient.fetchContacts();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,52 +60,45 @@ class StudentContactsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildContactItem(
-                        Icons.phone,
-                        '+7 (391) 264-06-59',
-                        const Color(0xFF4A90E2),
-                      ),
-                      _buildContactItem(
-                        Icons.phone,
-                        '+7 (391) 264-57-35',
-                        const Color(0xFF4A90E2),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildContactItem(
-                        Icons.phone,
-                        '+7 (391) 264-15-88',
-                        const Color(0xFF4A90E2),
-                      ),
-                      _buildContactItem(
-                        Icons.email,
-                        'ak@sibsau.ru',
-                        const Color(0xFF4A90E2),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildContactItem(
-                        Icons.language,
-                        'sibsau.ru',
-                        const Color(0xFF4A90E2),
-                      ),
-                      _buildContactItem(
-                        Icons.language,
-                        'sibgu_ru',
-                        const Color(0xFF4A90E2),
-                      ),
-                    ],
+                  FutureBuilder<List<ContactItem>>(
+                    future: _contactsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text('Ошибка загрузки контактов: ${snapshot.error}'),
+                        );
+                      }
+
+                      final contacts = snapshot.data ?? const <ContactItem>[];
+                      if (contacts.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text('Контакты не найдены'),
+                        );
+                      }
+
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        alignment: WrapAlignment.center,
+                        children: contacts
+                            .map(
+                              (contact) => _buildContactItem(
+                                _iconForType(contact.type),
+                                contact.value,
+                                const Color(0xFF4A90E2),
+                              ),
+                            )
+                            .toList(growable: false),
+                      );
+                    },
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -278,6 +294,20 @@ class StudentContactsScreen extends StatelessWidget {
       ),
     );
   }
+
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'phone':
+        return Icons.phone;
+      case 'email':
+        return Icons.email;
+      case 'website':
+        return Icons.language;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
   Widget _buildContactItem(IconData icon, String text, Color color) {
     return GestureDetector(
       onTap: () async {

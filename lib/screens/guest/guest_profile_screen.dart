@@ -1,27 +1,63 @@
 import 'package:flutter/material.dart';
+import '../../data/session/app_session.dart';
 import '../student/student_main_screen.dart';
+
 class GuestProfileScreen extends StatefulWidget {
   const GuestProfileScreen({super.key});
   @override
   State<GuestProfileScreen> createState() => _GuestProfileScreenState();
 }
+
 class _GuestProfileScreenState extends State<GuestProfileScreen> {
+  final _apiClient = AppSession.apiClient;
   final _loginController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
   @override
   void dispose() {
     _loginController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
-  void _login() {
-    if (_loginController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const StudentMainScreen(),
-        ),
+  Future<void> _login() async {
+    final login = _loginController.text.trim();
+    final password = _passwordController.text.trim();
+    if (login.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Введите логин и пароль')),
       );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final auth = await _apiClient.login(email: login, password: password);
+      final user = auth['user'];
+      final roles = user is Map<String, dynamic> && user['roles'] is List
+          ? (user['roles'] as List).map((e) => e.toString()).toList()
+          : <String>[];
+      if (!mounted) return;
+      if (roles.contains('student') || roles.contains('admin') || roles.contains('staff')) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const StudentMainScreen(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Для этого аккаунта пока нет UI-кабинета.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка входа: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
   @override
@@ -78,7 +114,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                     TextField(
                       controller: _loginController,
                       decoration: InputDecoration(
-                        hintText: 'Логин или телефон',
+                        hintText: 'Email',
                         filled: true,
                         fillColor: const Color(0xFFD6EAF8),
                         border: OutlineInputBorder(
@@ -107,7 +143,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _login,
+                        onPressed: _isLoading ? null : _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFD6EAF8),
                           foregroundColor: Colors.black87,
@@ -117,13 +153,19 @@ class _GuestProfileScreenState extends State<GuestProfileScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: const Text(
-                          'Войти',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text(
+                                'Войти',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                       ),
                     ),
                   ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../data/api/api_client.dart';
 import '../widgets/centered_app_bar_title.dart';
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
@@ -10,6 +11,22 @@ class StudentHomeScreen extends StatefulWidget {
 class _StudentHomeScreenState extends State<StudentHomeScreen> {
   // Список просмотренных историй
   final Set<int> _viewedStories = {};
+  final _apiClient = ApiClient(
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:8000',
+    ),
+  );
+  late Future<List<NewsItem>> _newsFuture;
+  late Future<List<StoryItem>> _storiesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _newsFuture = _apiClient.fetchNews();
+    _storiesFuture = _apiClient.fetchStories();
+  }
+
   void _markAsViewed(int index) {
     setState(() {
       _viewedStories.add(index);
@@ -32,189 +49,80 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             // ЛЕНТА ИСТОРИЙ (STORIES) - ПРЯМОУГОЛЬНИКИ
             SizedBox(
               height: 180,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                children: [
-                  _buildStoryItem(
-                    context,
-                    0,
-                    'Зарница 2.0',
-                    Colors.blue,
-                    'В Волгограде наградили победителей военно-патриотической игры',
-                  ),
-                  _buildStoryItem(
-                    context,
-                    1,
-                    'Спорт',
-                    Colors.green,
-                    'Студенты колледжа заняли первое место в соревнованиях',
-                  ),
-                  _buildStoryItem(
-                    context,
-                    2,
-                    'Новости',
-                    Colors.orange,
-                    'Открытие новой лаборатории по робототехнике',
-                  ),
-                  _buildStoryItem(
-                    context,
-                    3,
-                    'События',
-                    Colors.purple,
-                    'День открытых дверей - приглашаем всех желающих',
-                  ),
-                  _buildStoryItem(
-                    context,
-                    4,
-                    'Достижения',
-                    Colors.red,
-                    'Наши студенты стали призерами WorldSkills',
-                  ),
-                ],
+              child: FutureBuilder<List<StoryItem>>(
+                future: _storiesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('Ошибка загрузки историй: ${snapshot.error}'),
+                      ),
+                    );
+                  }
+                  final stories = snapshot.data ?? const <StoryItem>[];
+                  if (stories.isEmpty) {
+                    return const Center(child: Text('Истории пока отсутствуют'));
+                  }
+                  final prepared = List<StoryData>.generate(stories.length, (index) {
+                    final s = stories[index];
+                    return StoryData(
+                      title: s.title,
+                      content: s.content,
+                      color: _storyBorderColor(index),
+                      imageUrl: _toAbsoluteUrl(s.imageUrl),
+                    );
+                  });
+
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: prepared.length,
+                    itemBuilder: (context, index) {
+                      return _buildStoryItem(context, index, prepared[index], prepared);
+                    },
+                  );
+                },
               ),
             ),
             const SizedBox(height: 24),
-            // Новостная карточка 1
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ИЗОБРАЖЕНИЕ НОВОСТИ 1
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
-                      ),
-                      child: Image.asset(
-                        'assets/images/news/news1.jpg',
-                        width: double.infinity,
-                        height: 180,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: double.infinity,
-                            height: 180,
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Icon(Icons.image, size: 64, color: Colors.grey),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'В Волгограде наградили победителей «Зарницы 2.0»',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'На Мамаевом кургане состоялась торжественная церемония награждения участников Всероссийского финала военно-патриотической игры «Зарница 2.0». Масштабный проект объединяет патриотическое воспитание, физическую и начальную военную подготовку с применением современных цифровых технологий.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black87,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Новостная карточка 2
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ИЗОБРАЖЕНИЕ НОВОСТИ 2
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
-                      ),
-                      child: Image.asset(
-                        'assets/images/news/news2.jpg',
-                        width: double.infinity,
-                        height: 180,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: double.infinity,
-                            height: 180,
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Icon(Icons.image, size: 64, color: Colors.grey),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Спортивные мероприятия колледжа',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Студенты колледжа активно участвуют в спортивных соревнованиях и показывают отличные результаты.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.black87,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            FutureBuilder<List<NewsItem>>(
+              future: _newsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('Ошибка загрузки новостей: ${snapshot.error}'),
+                  );
+                }
+
+                final news = snapshot.data ?? const <NewsItem>[];
+                if (news.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('Новости пока отсутствуют'),
+                  );
+                }
+
+                return Column(
+                  children: news.take(6).map((item) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: _buildNewsCard(item),
+                    );
+                  }).toList(growable: false),
+                );
+              },
             ),
             const SizedBox(height: 24),
           ],
@@ -222,20 +130,103 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       ),
     );
   }
+
+  Widget _buildNewsCard(NewsItem item) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 5,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+            ),
+            child: item.imageUrl.isNotEmpty
+                ? Image.network(
+                    _toAbsoluteUrl(item.imageUrl),
+                    width: double.infinity,
+                    height: 180,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _newsPlaceholder(),
+                  )
+                : _newsPlaceholder(),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.content,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _newsPlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 180,
+      color: Colors.grey[300],
+      child: const Center(
+        child: Icon(Icons.image, size: 64, color: Colors.grey),
+      ),
+    );
+  }
+
+  String _toAbsoluteUrl(String value) {
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    final base = _apiClient.baseUrl.endsWith('/')
+        ? _apiClient.baseUrl.substring(0, _apiClient.baseUrl.length - 1)
+        : _apiClient.baseUrl;
+    if (value.startsWith('/')) {
+      return '$base$value';
+    }
+    return '$base/$value';
+  }
+
   // ПРЯМОУГОЛЬНАЯ КАРТОЧКА ИСТОРИИ С ИЗОБРАЖЕНИЕМ
   Widget _buildStoryItem(
       BuildContext context,
       int index,
-      String title,
-      Color borderColor,
-      String storyContent,
+      StoryData story,
+      List<StoryData> stories,
       ) {
     final bool isViewed = _isViewed(index);
-    // Путь к изображению истории
-    final String imagePath = 'assets/images/stories/story${index + 1}.jpg';
     return GestureDetector(
       onTap: () async {
-        await _openStoryViewer(context, index, title, storyContent, borderColor);
+        await _openStoryViewer(context, index, stories);
         _markAsViewed(index);
       },
       child: Container(
@@ -250,7 +241,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isViewed ? Colors.grey : borderColor,
+                  color: isViewed ? Colors.grey : story.color,
                   width: 3,
                 ),
               ),
@@ -259,8 +250,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 child: Stack(
                   children: [
                     // ИЗОБРАЖЕНИЕ ИСТОРИИ
-                    Image.asset(
-                      imagePath,
+                    Image.network(
+                      story.imageUrl,
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
@@ -297,7 +288,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          title,
+                          story.title,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -319,50 +310,28 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Future<void> _openStoryViewer(
       BuildContext context,
       int initialIndex,
-      String title,
-      String content,
-      Color color,
+      List<StoryData> stories,
       ) async {
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => StoryViewerScreen(
           initialIndex: initialIndex,
-          stories: [
-            StoryData(
-              title: 'Зарница 2.0',
-              content: 'В Волгограде наградили победителей военно-патриотической игры',
-              color: Colors.blue,
-              imagePath: 'assets/images/stories/story1.jpg',
-            ),
-            StoryData(
-              title: 'Спорт',
-              content: 'Студенты колледжа заняли первое место в соревнованиях',
-              color: Colors.green,
-              imagePath: 'assets/images/stories/story2.jpg',
-            ),
-            StoryData(
-              title: 'Новости',
-              content: 'Открытие новой лаборатории по робототехнике',
-              color: Colors.orange,
-              imagePath: 'assets/images/stories/story3.jpg',
-            ),
-            StoryData(
-              title: 'События',
-              content: 'День открытых дверей - приглашаем всех желающих',
-              color: Colors.purple,
-              imagePath: 'assets/images/stories/story4.jpg',
-            ),
-            StoryData(
-              title: 'Достижения',
-              content: 'Наши студенты стали призерами WorldSkills',
-              color: Colors.red,
-              imagePath: 'assets/images/stories/story5.jpg',
-            ),
-          ],
+          stories: stories,
         ),
       ),
     );
+  }
+
+  Color _storyBorderColor(int index) {
+    const palette = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.purple,
+      Colors.red,
+    ];
+    return palette[index % palette.length];
   }
 }
 // МОДЕЛЬ ДАННЫХ ИСТОРИИ
@@ -370,12 +339,12 @@ class StoryData {
   final String title;
   final String content;
   final Color color;
-  final String imagePath;
+  final String imageUrl;
   StoryData({
     required this.title,
     required this.content,
     required this.color,
-    required this.imagePath,
+    required this.imageUrl,
   });
 }
 // ЭКРАН ПРОСМОТРА ИСТОРИЙ
@@ -623,8 +592,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset(
-          story.imagePath,
+        Image.network(
+          story.imageUrl,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return Container(color: Colors.black);

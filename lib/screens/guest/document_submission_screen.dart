@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../data/session/app_session.dart';
+
 class DocumentSubmissionScreen extends StatefulWidget {
   final List<String>? initialSpecialties;
 
@@ -31,7 +33,9 @@ class _DocumentSubmissionScreenState
   final _phoneController = TextEditingController();
 
   final Set<String> _selectedSpecialties = {};
-  final List<String> _attachedFiles = [];
+  final List<PlatformFile> _attachedFiles = [];
+  bool _isSubmitting = false;
+  int _applicationId = 0;
   bool _submitted = false;
 
   static const List<String> _allSpecialties = [
@@ -84,7 +88,9 @@ class _DocumentSubmissionScreenState
       if (result != null && result.files.isNotEmpty) {
         setState(() {
           for (final file in result.files) {
-            _attachedFiles.add(file.name);
+            if (file.path != null && file.path!.isNotEmpty) {
+              _attachedFiles.add(file);
+            }
           }
         });
       }
@@ -131,8 +137,56 @@ class _DocumentSubmissionScreenState
     setState(() => _attachedFiles.removeAt(index));
   }
 
-  void _submit() {
-    setState(() => _submitted = true);
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Введите ФИО')),
+      );
+      return;
+    }
+    if (_selectedSpecialties.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Выберите хотя бы одну специальность')),
+      );
+      return;
+    }
+    if (_attachedFiles.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Прикрепите хотя бы один документ')),
+      );
+      return;
+    }
+    setState(() => _isSubmitting = true);
+    try {
+      final names = _attachedFiles.map((f) => f.name).toList(growable: false);
+      final id = await AppSession.apiClient.submitPublicApplication(
+        type: 'documents',
+        fullName: name,
+        email: email.isEmpty ? null : email,
+        phone: phone.isEmpty ? null : phone,
+        payload: {
+          'specialties': _selectedSpecialties.toList(growable: false),
+          'attached_file_names': names,
+        },
+        files: _attachedFiles,
+      );
+      if (!mounted) return;
+      setState(() {
+        _applicationId = id;
+        _submitted = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка отправки: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
@@ -344,7 +398,7 @@ class _DocumentSubmissionScreenState
                             color: Color(0xFF4CAF50), size: 20),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(_attachedFiles[i],
+                          child: Text(_attachedFiles[i].name,
                               style: const TextStyle(fontSize: 13)),
                         ),
                         GestureDetector(
@@ -402,9 +456,15 @@ class _DocumentSubmissionScreenState
                 duration: const Duration(milliseconds: 300),
                 child: ElevatedButton.icon(
                   onPressed:
-                  _attachedFiles.isNotEmpty ? _submit : null,
-                  icon: const Icon(Icons.send),
-                  label: const Text('Подать документы'),
+                  (_attachedFiles.isNotEmpty && !_isSubmitting) ? _submit : null,
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.send),
+                  label: Text(_isSubmitting ? 'Отправка...' : 'Подать документы'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4A90E2),
                     disabledBackgroundColor:
@@ -479,6 +539,14 @@ class _DocumentSubmissionScreenState
                 style: TextStyle(
                     fontSize: 15, color: Colors.black54, height: 1.6),
               ),
+              if (_applicationId > 0) ...[
+                const SizedBox(height: 12),
+                Text(
+                  'Номер заявки: $_applicationId',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+              ],
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () => Navigator.popUntil(
